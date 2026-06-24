@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Agent Portal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background-color: #2c3e50;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 2.5em;
+      letter-spacing: 2px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .container p {
+      font-size: 1.2em;
+      color: #555;
+    }
+    .chat-btn {
+        display: inline-block;
+      margin-top: 20px;
+      padding: 12px 24px;
+      background-color: #cd14cd;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background 0.3s ease;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 24px;
+      background-color: #3498db;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background 0.3s ease;
+    }
+    .users{
+      font-size: 1.0em;
+      color: black;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background:  #03f8f8;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .chat-btn:hover {
+        background-color: #071ee5;
+    }
+    .btn:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Agent Portal</h1>
+  </div>
+  <div class="container">
+    <p>Welcome to the Agent Portal. Use this page to manage your tasks and access resources.</p>
+    <br>
+    <br>
+  </div>
+  <div class="users" id="users"> 
+    user info : 
+    <a href="{{url_for('agent_chat')}}"><button type="submit"> go to chat </button>
+  </div>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+  var socket = io();
+  
+  socket.emit("USERS", {});
+  var userId = "{{user_id}}";
+  var roomId = "{{room_id}}"
+  socket.emit("join_room",{user_id : userId});
+ 
+
+  // Listen for all_users event
+  socket.on("all_users", function(data){// Debugging ke liye
+    var container = document.querySelector("#users");
+    container.innerHTML = "";
+    data.forEach(function(user){
+      var div = document.createElement("div");
+      div.className = "users";
+      div.innerHTML = "user id: " + user.user_id +
+                      " | user name: " + user.name +
+                      " | email: " + user.email +
+                      " | service: " + user.service +
+                      " | room id: " + user.room_id;
+      
+      var btn = document.createElement("button");
+      btn.innerText = "REPLY" + user.name;
+
+      btn.addEventListener("click",function(){
+        console.log("chat button clicked for user",user.user_id);
+        window.location.href = "/agent_chat?user_id=" + user.user_id;
+      });
+
+      div.appendChild(document.createElement("br"));
+      div.appendChild(btn);
+      container.appendChild(div);
+    });
+  });
+</script>
+
+
+</body>
+</html>
