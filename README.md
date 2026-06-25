@@ -46,7 +46,7 @@ chatbot/
 └── README.md
 ⚙️ Installation
 1. Clone the Repository
-git clone https://github.com/yourusername/ai-customer-chatbot.git
+git clone https://github.com/gopalkashyap19/chatbot_github.git
 
 cd ai-customer-chatbot
 2. Create Virtual Environment
@@ -153,6 +153,7 @@ Customer Chat Interface
 Agent Login
 Agent Dashboard
 Agent Chat Window
+
 🔒 Future Improvements
 Password hashing using Werkzeug
 JWT Authentication
@@ -163,6 +164,7 @@ User authentication
 Admin dashboard
 AI conversation memory
 Analytics and reporting
+
 🤝 Contributing
 
 Contributions, feature requests, and improvements are welcome.
