@@ -107,6 +107,17 @@
   var room_Id = "{{room_id}}";
 
   socket.emit("join_room",{user_id : user_Id});
+  socket.on("chat_history", function (data) {
+        var chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML = ""; // clear existing messages
+
+        data.forEach(function (data) {
+          var div = document.createElement("div");
+          div.className = data.role;
+          div.innerText = data.role + " : " + data.message;
+          chatBox.appendChild(div);
+        });
+  });
   document.getElementById("chat-form").addEventListener("submit",function(e){
     e.preventDefault();
     var msg = document.getElementById("message").value;
