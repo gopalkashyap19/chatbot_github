@@ -28,8 +28,17 @@ genai.configure(api_key="AQ.Ab8RN6L8XDmbpF1TsvIDQBTXg7NAVkQdMmpS6m-jSyirL1nc8w")
 
 @socketio.on("join_room")
 def handle_join(data):
+
     room = f"{data['user_id']}room"
     join_room(room)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT role, message FROM chatbot_chats WHERE room_id=%s ORDER BY id ASC", (room,))
+    history = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    socketio.emit("chat_history", [{"role": r, "message": m} for r, m in history], room=room)
 
 def ai_chatbot_response(user_input):
     model = genai.GenerativeModel("gemini-2.5-flash-lite")  # or "gemini-1.5-pro"
@@ -129,6 +138,12 @@ def agent_login():
 
 app.register_blueprint(auth)
 
+@app.route("/agent_dashboard",methods=["GET"])
+def agent_dashboard():
+    return render_template("agent.html")
+
+
+
 @app.route("/chats",methods=["GET"])
 def chats():
     socketio.emit('USERS',{})
@@ -175,12 +190,10 @@ def user_response(data):
 @socketio.on('USERS')
 def user_info(data):
     # Yeh values login ke time set karni hongi
-    user_id = session.get('user_id')
-    room_id = session.get('room_id')
     users = []
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id,name,country,mobile,email,service FROM chat ORDER BY id DESC;")
+    cursor.execute("SELECT id,name,country,mobile,email,service,user_id,room_id FROM chat ORDER BY id DESC;")
     user_information = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -188,11 +201,11 @@ def user_info(data):
     if user_information:
         for user in user_information:
             users.append({
-                "user_id": user_id if user_id else user[0],   # agar session empty hai to DB id use karo
+                "user_id": user[6] if user[6] else user[0],   # agar session empty hai to DB id use karo
                 "name": user[1],
                 "email": user[4],
                 "service": user[5],
-                "room_id": room_id if room_id else "N/A"
+                "room_id": user[7] if user[7] else "N/A"
             })  
     socketio.emit("all_users",users)  # broadcast zaruri hai
 
