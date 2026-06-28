@@ -3,49 +3,322 @@
 <head>
   <meta charset="UTF-8">
   <title>Chatbot</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}?v=1">
+  <link rel="icon" type="image/png" sizes="96x96" href="{{ url_for('static', filename='favicon-96x96.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
-    body { 
-      font-family: Arial, 
-      sans-serif; 
-      background:#f9f9f9;
-    }
-    .chatbox {
-      width:400px;
-      margin:50px auto;
-      background:#fff;
-      border:2px solid #ff69b4;
-      border-radius:8px;
-      padding:20px;
-    }
-    .header {
-      background:#ff69b4;
-      color:#fff;
-      padding:10px;
-      text-align:center;
-      font-weight:bold;
-      border-radius:6px;
-      margin-bottom:15px;
-    }
-    input, select, button {
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      border-radius:4px;
-      border:1px solid #ccc;
-    }
-    button {
-      background:#ff69b4;
-      color:#fff;
-      border:none;
-      cursor:pointer;
-    }
-    button:hover {
-      background:#ff1493;
-    }
+body { 
+  font-family: 'Segoe UI', Arial, sans-serif; 
+  background: linear-gradient(135deg, #f4f6f9, #e9ecf2);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+p {
+  font-size: 25px;
+  text-align: center;
+  margin: 0 0 10px 0;
+}
+
+button, input {
+  font-size: 1rem;
+  padding: 12px;
+}
+
+/* Agent login button - fixed positioning for top */
+.agent {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: auto;
+  min-width: 150px;
+  padding: 10px 30px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.agent:hover {
+  background: #2980b9;
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+.chatbox {
+  width: 90%;
+  max-width: 500px;
+  background: #fff;
+  border: 2px solid #3498db;
+  border-radius: 20px;
+  padding: 40px 35px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease-in-out;
+  margin: 0 auto;
+}
+
+.chatbox:hover {
+  transform: translateY(-4px);
+}
+
+.header {
+  background: linear-gradient(90deg, #3498db, #2980b9);
+  color: #fff;
+  padding: 18px 30px;
+  text-align: center;
+  font-weight: bold;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  font-size: 28px;
+  letter-spacing: 0.5px;
+}
+
+/* Message style - like in your image */
+.message {
+  background: #f0f4f8;
+  padding: 12px 18px;
+  border-radius: 15px;
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: #2c3e50;
+  text-align: center;
+}
+
+.message span {
+  background: #e8edf3;
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+
+input, select {
+  width: 100%;
+  padding: 14px 20px;
+  margin-top: 15px;
+  border-radius: 30px;
+  border: 2px solid #e0e6ed;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
+  background: #f8fafc;
+}
+
+input:focus, select:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+
+input::placeholder {
+  color: #a0b0c0;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 20px;
+  border-radius: 30px;
+  border: none;
+  background: linear-gradient(90deg, #3498db, #2980b9);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.25);
+}
+
+button:hover {
+  background: linear-gradient(90deg, #1f78c1, #145a86);
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.35);
+}
+
+/* Desktop and Tablet styles */
+@media (min-width: 769px) {
+  body {
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #f4f6f9, #e9ecf2);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .agent {
+    top: 30px;
+    padding: 12px 40px;
+    font-size: 20px;
+  }
+
+  .chatbox {
+    width: 450px;
+    max-width: 90%;
+    padding: 45px 40px;
+    border-radius: 24px;
+    margin-top: 20px;
+  }
+
+  .header {
+    font-size: 32px;
+    padding: 20px 35px;
+    border-radius: 14px;
+  }
+
+  .message {
+    font-size: 20px;
+    padding: 15px 22px;
+  }
+
+  input, select {
+    font-size: 17px;
+    padding: 16px 24px;
+  }
+
+  button {
+    font-size: 19px;
+    padding: 16px;
+  }
+}
+
+/* Tablet specific adjustments */
+@media (min-width: 481px) and (max-width: 768px) {
+  body {
+    padding: 30px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .agent {
+    top: 25px;
+    padding: 10px 35px;
+    font-size: 18px;
+  }
+
+  .chatbox {
+    width: 85%;
+    max-width: 450px;
+    padding: 35px 30px;
+    margin-top: 15px;
+  }
+
+  .header {
+    font-size: 26px;
+    padding: 16px 25px;
+  }
+
+  .message {
+    font-size: 18px;
+    padding: 12px 18px;
+  }
+
+  input, select {
+    font-size: 16px;
+    padding: 14px 20px;
+  }
+
+  button {
+    font-size: 17px;
+    padding: 14px;
+  }
+}
+
+/* Mobile styles - unchanged from original */
+@media (max-width: 480px) {
+  body {
+    align-items: stretch;
+    background: #fff;
+    padding: 0;
+    display: block;
+  }
+
+  .agent {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    min-width: 130px;
+    padding: 8px 20px;
+    font-size: 14px;
+    background: #3498db;
+    color: white;
+    border-radius: 25px;
+    z-index: 10;
+  }
+
+  .agent:hover {
+    transform: translateX(-50%) scale(1.02);
+  }
+
+  .chatbox {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 25px 20px;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .chatbox:hover {
+    transform: none;
+  }
+
+  .header {
+    font-size: 20px;
+    padding: 14px 18px;
+    border-radius: 25px;
+    margin-bottom: 20px;
+  }
+
+  .message {
+    font-size: 16px;
+    padding: 10px 14px;
+  }
+
+  input, select {
+    font-size: 15px;
+    padding: 14px 18px;
+    border-radius: 25px;
+    margin-top: 12px;
+  }
+
+  button {
+    margin-top: 18px;
+    padding: 16px;
+    font-size: 16px;
+    border-radius: 25px;
+  }
+}
+
   </style>
 </head>
 <body>
-  <a href="{{url_for('signup_page')}}"><button align="right"> Agent login </button></a>
+  <a href="{{url_for('signup_page')}}" class="agent">Agent login</a>
   <div class="chatbox">
     <div class="header">Messages</div>
     {% if step == 1 %}
@@ -99,8 +372,9 @@
         socket.emit("USERS", {});
         var userId = "{{user_id}}";
         var roomId = "{{room_id}}";
-        socket.emit("join_room",{room_id : roomId});
+        socket.emit("join_room",{user_id : userId});
       });
+    
     </script>
 </body>
 </html>
