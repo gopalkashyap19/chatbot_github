@@ -1,113 +1,227 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>AI Chatbot</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .chat-container {
-      width: 500px;
-      height: 600px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-    }
-    .chat-header {
-      background: #ff69b4;
-      color: #fff;
-      padding: 15px;
-      text-align: center;
-      font-weight: bold;
-      border-radius: 8px 8px 0 0;
-    }
-    .chat-box {
-      flex: 1;
-      overflow-y: auto;
-    }
-    .message {
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 6px;
-      max-width: 80%;
-    }
-    .user {
-      background: #d1e7ff;
-      align-self: flex-end;
-    }
-    .bot {
-      background: #f0f0f0;
-      align-self: flex-start;
-    }
-    .chat-form {
-      display: flex;
-      padding: 10px;
-      border-top: 1px solid #ddd;
-    }
-    .chat-form input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    .chat-form button {
-      margin-left: 10px;
-      padding: 10px 20px;
-      background: #ff69b4;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .user{
-        background: #0389f7;
-        color: white;
-    }
-    .agent{
-        background: #04f0f4;
-        color: black;
-    }
-    .chatbot{
-        background: #ff1493;
-        color: white;
-    }
-    .chat-form button:hover {
-      background: #ff1493;
-    }
-  </style>
-</head>
-<body>
-  <div class="chat-container">
-    <header class="chat-header">User's Chatbot</header>
-    <div class="chat-box" id="chat-box">
-        {% for mes in mess2 %}
-            <div class="{{mes.role}}">{{mes.role}} : {{mes.message}}</div> 
-        {% endfor %}
-        
-      <!-- Messages will appear here -->
-    </div>
-    <form class="chat-form" id = "chat-form">
-      <input type="text" id="message" name="message" placeholder="Type your message..." required>
-      <button type="submit">Send</button>
-    </form>
-  </div>
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script>
-  var socket = io();
-  var user_Id = "{{user_id}}";
-  var room_Id = "{{room_id}}";
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Chatbot</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}?v=1">
+    <link rel="icon" type="image/png" sizes="96x96" href="{{ url_for('static', filename='favicon-96x96.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #ece5dd; /* WhatsApp background */
+        display: flex;
+        flex : 0;
+        justify-content: center;
+        align-items: stretch;
+        height: 100vh;
+        margin: 0;
+      }
+      button, input {
+      font-size: 1rem;
+      padding: 12px;
+      }
 
-  socket.emit("join_room",{user_id : user_Id});
-  socket.on("chat_history", function (data) {
+      .chat-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 600px;
+        height: 100vh;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        overflow: hidden;
+      }
+
+      .chat-header {
+        flex: 0 0 auto;
+        position: fixed;            /* stick to top */
+        top: 0; 
+        left: 0;
+        right: 0;
+        z-index: 10;                     /* anchor at top */                /* stay above messages */
+        background: #3498db; /* blue header */
+        color: #fff;
+        padding: 18px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+      }
+
+      .chat-box {
+        margin-top: 40px;
+        margin-bottom: 70px;
+        flex: 1 1 auto; 
+        overflow-y: auto;
+        padding: 20px;
+        background: #ece5dd; /* WhatsApp chat wallpaper */
+        display: flex;
+        flex-direction: column;
+      }
+
+      .message {
+        margin: 10px 0;
+        padding: 14px 18px;
+        border-radius: 20px; /* rounded pill shape */
+        max-width: 75%; /* balanced width */
+        font-size: 0.95rem;
+        line-height: 1.4;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* subtle depth */
+      }
+
+      .user {
+        background: #3498db; /* blue bubble */
+        color: #fff;
+        align-self: flex-end;
+        border-radius: 20px 20px 0 20px; /* curved with one corner sharper */
+        padding: 0.5rem 0.3rem;
+
+      }
+
+      .agent {
+        background: #f1f1f1; /* light gray bubble */
+        color: #333;
+        align-self: flex-start;
+        border-radius: 20px 20px 20px 0; /* opposite corner sharper */
+        padding: 0.5rem 0.5rem;
+      }
+
+      .chatbot {
+        background: #f0f0f0;
+        align-self: flex-start;
+        border-radius: 24px;
+      }
+
+      .message::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .user::after {
+        content: "";
+        position: absolute;
+        right: -8px;
+        bottom: 0;
+        border-left: 8px solid #3498db;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+      }
+
+      .agent::after {
+        content: "";
+        position: absolute;
+        left: -8px;
+        bottom: 0;
+        border-right: 8px solid #f1f1f1;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+      }
+
+      .chat-form {
+        flex: 0 0 auto;              /* fixed height */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;           /* stick to bottom */  
+        display: flex;
+        padding: 12px;
+        border-top: 1px solid #ddd;
+        background: #f0f0f0;
+        
+      }
+
+      .chat-form input {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 25px;
+        outline: none;
+        background: #fff;
+        font-size: 1rem;
+      }
+
+      .chat-form button {
+        margin-left: 10px;
+        padding: 12px 16px;
+        background: #3498db;
+        color: #fff;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+      }
+
+      .chat-form button:hover {
+        background: #1f78c1;
+      }
+      @media (max-width: 480px) {
+          body {
+            align-items: stretch; /* ensure full height fit on mobile */
+          }
+        .chat-container {
+          width: 100%;
+          height: 100vh;
+          border-radius: 0;   /* remove rounded corners for full-screen look */
+        }
+
+        .message {
+          max-width: 95%;     /* bubbles fit better on small screens */
+          font-size: 0.85rem; /* slightly smaller text */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-container">
+      <header class="chat-header">User's Chatbot</header>
+      <div class="chat-box" id="chat-box">
+        {% for mes in mess2 %}
+        <div class="{{mes.role}}">{{mes.role}} : {{mes.message}}</div>
+        {% endfor %}
+
+        <!-- Messages will appear here -->
+      </div>
+      <form class="chat-form" id="chat-form">
+        <input
+          type="text"
+          id="message"
+          name="message"
+          placeholder="Type your message..."
+          required
+        />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+    
+      const socket = io("https://m1c0v6wq-5000.inc1.devtunnels.ms/", {
+          transports: ['websocket', 'polling']
+      });
+
+      socket.on('connect_error', (err) => {
+          console.error("Connection failed:", err);
+      });
+      socket.on('disconnect', () => {
+          console.warn("Socket disconnected");
+      });
+      var user_Id = "{{user_id}}";
+      var room_Id = "{{room_id}}";
+      
+      socket.emit("join_room", { user_id: user_Id });
+      
+
+
+      socket.on("chat_history", function (data) {
         var chatBox = document.getElementById("chat-box");
         chatBox.innerHTML = ""; // clear existing messages
 
@@ -117,20 +231,22 @@
           div.innerText = data.role + " : " + data.message;
           chatBox.appendChild(div);
         });
-  });
-  document.getElementById("chat-form").addEventListener("submit",function(e){
-    e.preventDefault();
-    var msg = document.getElementById("message").value;
-    socket.emit("user_response",{message:msg ,user_id : user_Id,room_id : room_Id});
-    document.getElementById("message").value="";
-  });
+      });
 
-  socket.on("new_message",function(data){
-    var div = document.createElement("div");
-    div.className = data.role;
-    div.innerText = data.role + " :" + data.message;
-    document.querySelector("#chat-box").appendChild(div);
-  });
-</script>
-</body>
+      
+      document.getElementById("chat-form").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var msg = document.getElementById("message").value;
+          socket.emit("user_response", {message: msg,user_id: user_Id,room_id: room_Id,});
+          document.getElementById("message").value = "";
+        });
+
+      socket.on("new_message", function (data) {
+        var div = document.createElement("div");
+        div.className = data.role;
+        div.innerText = data.role + " :" + data.message;
+        document.querySelector("#chat-box").appendChild(div);
+      });
+    </script>
+  </body>
 </html>
