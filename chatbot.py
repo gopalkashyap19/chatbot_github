@@ -1,4 +1,4 @@
-from flask import Flask,render_template,request,url_for,redirect,jsonify,Blueprint,session,make_response,flash
+from flask import Flask,render_template,request,url_for,redirect,jsonify,Blueprint,session,make_response,flash,send_from_directory
 import google.generativeai as genai
 from db import get_db_connection 
 from email_validator import validate_email, EmailNotValidError
@@ -25,6 +25,26 @@ Session(app)
 socketio = SocketIO(app)
 
 genai.configure(api_key="AQ.Ab8RN6L8XDmbpF1TsvIDQBTXg7NAVkQdMmpS6m-jSyirL1nc8w")
+
+@app.after_request
+def add_header(response):
+    if request.path.endswith('favicon.ico'):
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(app.static_folder, 'favicon.ico')
+
+
+@socketio.on("connect_error")
+def connection_error(err):
+    return f"connection failed: {err}"
+
+@socketio.on("disconnect")
+def disconnect():
+    return "socket disconnected"
+
 
 @socketio.on("join_room")
 def handle_join(data):
@@ -53,8 +73,8 @@ def chatbot():
     if request.method == "POST":
         if "name" in request.form:
             name = request.form["name"]
-            user_id = name
-            room_id = name + "room"
+            user_id = name.strip()
+            room_id = name.strip() + "room"
             session['user_id'] = user_id
             session['room_id'] = room_id
             session['name'] = name
@@ -169,7 +189,8 @@ def agent_res(resp):
     ress = cursor.fetchall()
     cursor.close()
     conn.close()
-    socketio.emit("new_message",{"role":role2,"message":agent_message},room=room)
+    socketio.emit("new_message",{"role":role2,"message":agent_message},room=room,)
+
     
 @socketio.on('user_response')
 def user_response(data):
