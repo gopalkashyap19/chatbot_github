@@ -7,8 +7,9 @@ from werkzeug.security import generate_password_hash,check_password_hash
 from flask_jwt_extended import JWTManager,create_access_token,jwt_required,get_jwt_identity
 from flask_session import Session
 from datetime import timedelta
-from flask_socketio import SocketIO,join_room
+from flask_socketio import SocketIO,join_room,leave_room,send
 import uuid
+import os
 
 
 app = Flask(__name__)
@@ -37,18 +38,11 @@ def favicon():
     return send_from_directory(app.static_folder, 'favicon.ico')
 
 
-@socketio.on("connect_error")
-def connection_error(err):
-    return f"connection failed: {err}"
-
-@socketio.on("disconnect")
-def disconnect():
-    return "socket disconnected"
-
 
 @socketio.on("join_room")
 def handle_join(data):
-
+    a_id = session.get('agent_id')
+    agent = "Agent_"+str(a_id)
     room = f"{data['user_id']}room"
     join_room(room)
 
@@ -56,6 +50,8 @@ def handle_join(data):
     cursor = conn.cursor()
     cursor.execute("SELECT role, message FROM chatbot_chats WHERE room_id=%s ORDER BY id ASC", (room,))
     history = cursor.fetchall()
+    cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s",(agent,room))
+    conn.commit()
     cursor.close()
     conn.close()
     socketio.emit("chat_history", [{"role": r, "message": m} for r, m in history], room=room)
@@ -183,7 +179,9 @@ def agent_res(resp):
     role2 = "agent"
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id) VALUES(%s,%s,%s,%s)",(role2,agent_message,user_id,room))
+    cursor.execute("SELECT agent_asigned from chat WHERE room_id = %s",(room,))
+    agent = cursor.fetchone()
+    cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id,agent_asigned) VALUES(%s,%s,%s,%s,%s)",(role2,agent_message,user_id,room,agent[0]))
     conn.commit()
     cursor.execute("SELECT message FROM chatbot_chats WHERE role = 'user' ORDER BY id DESC LIMIT 1")
     ress = cursor.fetchall()
@@ -194,13 +192,17 @@ def agent_res(resp):
     
 @socketio.on('user_response')
 def user_response(data):
+    
     user_input = data["message"]
     user_id = session.get('user_id')
     room = session.get('room_id')
+    agent = data['agent_id']
     role = "user"
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id) VALUES(%s,%s,%s,%s)",(role,user_input,user_id,room))
+    cursor.execute("SELECT agent_asigned from chat WHERE room_id = %s",(room,))
+    agent = cursor.fetchone()
+    cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id) VALUES(%s,%s,%s,%s,%s)",(role,user_input,user_id,room,agent[0]))
     conn.commit()
     cursor.execute("SELECT message FROM chatbot_chats WHERE role = 'agent' ORDER BY id DESC LIMIT 1")
     mess2 = cursor.fetchall()
@@ -231,7 +233,7 @@ def user_info(data):
     socketio.emit("all_users",users)  # broadcast zaruri hai
 
 
-    
+  
 
 @app.route("/login_page",methods=["GET"])
 def login_page():
