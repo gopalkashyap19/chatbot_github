@@ -44,10 +44,17 @@ def handle_join(data):
     a_id = session.get('agent_id')
     agent = "Agent_"+str(a_id)
     room = f"{data['user_id']}room"
-    join_room(room)
-
     conn = get_db_connection()
     cursor = conn.cursor()
+    cursor.execute("SELECT agent_asigned FROM chat WHERE room_id=%s", (room,))
+    agent_check = cursor.fetchone()
+    if agent_check:
+        if agent != agent_check[0]:
+            socketio.emit("redirect",{'url' : '/agent_dashboard'})
+            cursor.close()
+            conn.close()
+            return
+    join_room(room)
     cursor.execute("SELECT role, message FROM chatbot_chats WHERE room_id=%s ORDER BY id ASC", (room,))
     history = cursor.fetchall()
     cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s",(agent,room))
@@ -168,6 +175,8 @@ def handover(data):
     conn.commit()
     cursor.close()
     conn.close()
+    socketio.emit("handover_confirmation", {"room_id": room, "new_agent": new_agent})
+
 
 @app.route("/chats",methods=["GET"])
 def chats():
