@@ -216,8 +216,9 @@
       });
       var user_Id = "{{user_id}}";
       var room_Id = "{{room_id}}";
+      var agent_Id = "{{agent_id}}";
       
-      socket.emit("join_room", { user_id: user_Id });
+      socket.emit("join_room", { user_id: user_Id, agent_id : agent_Id });
       
 
 
@@ -237,7 +238,7 @@
       document.getElementById("chat-form").addEventListener("submit", function (e) {
           e.preventDefault();
           var msg = document.getElementById("message").value;
-          socket.emit("user_response", {message: msg,user_id: user_Id,room_id: room_Id,});
+          socket.emit("user_response", {message: msg,user_id: user_Id,room_id: room_Id,agent_id: agent_Id});
           document.getElementById("message").value = "";
         });
 
