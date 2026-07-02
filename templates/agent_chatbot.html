@@ -208,8 +208,9 @@
       var socket = io();
       var user_Id = "{{user_id}}";
       var room_Id = "{{room_id}}";
+      var agent_Id = "{{agent_id}}";
 
-      socket.emit("join_room", { user_id: user_Id });
+      socket.emit("join_room", { user_id: user_Id,agent_id: agent_Id });
 
       socket.on("chat_history", function (data) {
         var chatBox = document.getElementById("agent_chat-box");
@@ -229,6 +230,7 @@
             response: res_mess,
             user_id: user_Id,
             room_id: room_Id,
+            agent_id: agent_Id
           });
           document.getElementById("response").value = "";
         });
