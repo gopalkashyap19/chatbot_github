@@ -268,6 +268,11 @@
 
       socket.emit("join_room", { user_id: user_Id,agent_id: agent_Id });
 
+      socket.on('redirect',function(data){
+        window.location.href = data.url;
+        alert("! Another agent is already in chat !")
+      });
+
       socket.on("chat_history", function (data) {
         var chatBox = document.getElementById("agent_chat-box");
         chatBox.innerHTML = ""; // clear existing messages
@@ -324,6 +329,9 @@
 
           btn.addEventListener("click",function(){
             socket.emit("handover",{"handover_agent": agent,"room_id": room_Id});
+            alert("Chat is handed over to the Agent : " + agent);
+            window.location.href = "/agent_dashboard";
+            
           });
           container.appendChild(btn);
         });
