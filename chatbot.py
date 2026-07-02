@@ -158,7 +158,16 @@ app.register_blueprint(auth)
 def agent_dashboard():
     return render_template("agent.html")
 
-
+@socketio.on("handover")
+def handover(data):
+    new_agent = "Agent_" + str(data['handover_agent'])
+    room = str(data['room_id'])
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s",(new_agent,room))
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 @app.route("/chats",methods=["GET"])
 def chats():
@@ -202,13 +211,33 @@ def user_response(data):
     cursor = conn.cursor()
     cursor.execute("SELECT agent_asigned from chat WHERE room_id = %s",(room,))
     agent = cursor.fetchone()
-    cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id) VALUES(%s,%s,%s,%s,%s)",(role,user_input,user_id,room,agent[0]))
+    cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id,agent_asigned) VALUES(%s,%s,%s,%s,%s)",(role,user_input,user_id,room,agent[0]))
     conn.commit()
     cursor.execute("SELECT message FROM chatbot_chats WHERE role = 'agent' ORDER BY id DESC LIMIT 1")
     mess2 = cursor.fetchall()
     cursor.close()
     conn.close()
     socketio.emit("new_message",{"role":role,"message":user_input},room=room)
+
+
+
+@socketio.on('Agents')
+def Agents(data):
+    agent_ids = []
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT agent_name FROM agents")
+    agent_data = cursor.fetchall()
+    conn.close()
+    cursor.close()
+    if agent_data:
+        for ag_id in agent_data:
+            agent_ids.append(ag_id[0])
+    socketio.emit("all_agents",agent_ids)
+
+
+
+
 
 @socketio.on('USERS')
 def user_info(data):
