@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash,check_password_hash
 from flask_jwt_extended import JWTManager,create_access_token,jwt_required,get_jwt_identity
 from flask_session import Session
 from datetime import timedelta
-from flask_socketio import SocketIO,join_room,leave_room,send
+from flask_socketio import SocketIO,join_room,leave_room,send,emit
 import uuid
 import os
 
@@ -39,29 +39,65 @@ def favicon():
 
 
 
-@socketio.on("join_room")
+@socketio.on("join_room") 
 def handle_join(data):
     a_id = session.get('agent_id')
-    agent = "Agent_"+str(a_id)
+    agent = "Agent_" + str(a_id)
     room = f"{data['user_id']}room"
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT agent_asigned FROM chat WHERE room_id=%s", (room,))
     agent_check = cursor.fetchone()
-    if agent_check:
-        if agent != agent_check[0]:
-            socketio.emit("redirect",{'url' : '/agent_dashboard'})
-            cursor.close()
-            conn.close()
+
+
+    if not agent_check:
             return
-    join_room(room)
-    cursor.execute("SELECT role, message FROM chatbot_chats WHERE room_id=%s ORDER BY id ASC", (room,))
-    history = cursor.fetchall()
-    cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s",(agent,room))
-    conn.commit()
+   
+    elif agent_check[0] == None:
+        cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s", (agent, room))
+        conn.commit()
+
+    # If another agent is already assigned
+    elif agent_check and agent == agent_check[0]:
+        join_room(room)
+        emit("join_success", {"url": "/agent_chat?user_id=" + str(data["user_id"])}, room=request.sid)
+        cursor.close()
+        conn.close()
+        return
+
+    elif agent_check and agent != agent_check[0]:
+        emit("redirect", {'url': '/agent_dashboard'}, room=request.sid)
+        cursor.close()
+        conn.close()
+        return
+
+    # If no row exists, insert one
+    
+    # If row exists but agent_asigned is NULL, assign this agent
+    
     cursor.close()
     conn.close()
-    socketio.emit("chat_history", [{"role": r, "message": m} for r, m in history], room=room)
+    join_room(room)
+    emit(
+        "join_success",
+        {
+            "url":"/agent_chat?user_id="+str(data["user_id"])
+        },
+        room=request.sid
+    )
+    
+
+@socketio.on("chat_data")
+def chat_data(data):
+    room = f"{data['room_id']}"
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT role, message FROM chatbot_chats WHERE room_id=%s ORDER BY id ASC", (room,))
+    history = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    emit("chat_history", [{"role": r, "message": m} for r, m in history], room=room)
+
 
 def ai_chatbot_response(user_input):
     model = genai.GenerativeModel("gemini-2.5-flash-lite")  # or "gemini-1.5-pro"
@@ -149,7 +185,7 @@ def agent_login():
         session["agent_id"] = agent_login_name
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT agent_name,agent_password from agents where agent_name=%s AND agent_password=%s",(agent_login_name,agent_login_password))
+        cursor.execute("SELECT agent_name,agent_password from agents WHERE  BINARY agent_name=%s AND agent_password=%s",(agent_login_name,agent_login_password))
         checkp = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -180,7 +216,6 @@ def handover(data):
 
 @app.route("/chats",methods=["GET"])
 def chats():
-    socketio.emit('USERS',{})
     return render_template("chats.html",user_id = session['user_id'])
 
 @app.route("/agent_chat",methods=["GET"])
@@ -237,8 +272,8 @@ def Agents(data):
     cursor = conn.cursor()
     cursor.execute("SELECT agent_name FROM agents")
     agent_data = cursor.fetchall()
-    conn.close()
     cursor.close()
+    conn.close()
     if agent_data:
         for ag_id in agent_data:
             agent_ids.append(ag_id[0])
