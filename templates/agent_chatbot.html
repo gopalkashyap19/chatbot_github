@@ -265,19 +265,26 @@
       var user_Id = "{{user_id}}";
       var room_Id = "{{room_id}}";
       var agent_Id = "{{agent_id}}";
-
+  
       socket.emit("join_room", { user_id: user_Id,agent_id: agent_Id });
+      
+      socket.on("join_success", function(){
 
+        socket.emit("chat_data", {
+            room_id: room_Id
+        });
+      });
+      
       socket.on('redirect',function(data){
         window.location.href = data.url;
         alert("! Another agent is already in chat !")
       });
 
-      socket.on("chat_history", function (data) {
+      socket.on("chat_history", function(data) {
         var chatBox = document.getElementById("agent_chat-box");
         chatBox.innerHTML = ""; // clear existing messages
 
-        data.forEach(function (data) {
+        data.forEach(function(data) {
           var div = document.createElement("div");
           div.className = data.role;
           div.innerText = data.role + " : " + data.message;
@@ -287,15 +294,10 @@
       document.getElementById("chat-form2").addEventListener("submit", function (e) {
           e.preventDefault();
           var res_mess = document.getElementById("response").value;
-          socket.emit("agent_res", {
-            response: res_mess,
-            user_id: user_Id,
-            room_id: room_Id,
-            agent_id: agent_Id
-          });
+          socket.emit("agent_res", {response: res_mess,user_id: user_Id,room_id: room_Id,agent_id: agent_Id});
           document.getElementById("response").value = "";
         });
-      socket.on("new_message", function (data) {
+      socket.on("new_message", function(data) {
         var div = document.createElement("div");
         div.className = data.role;
         div.innerText = data.role + " :" + data.message;
