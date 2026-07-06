@@ -204,9 +204,7 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
     
-      const socket = io("https://m1c0v6wq-5000.inc1.devtunnels.ms/", {
-          transports: ['websocket', 'polling']
-      });
+      var socket = io();
 
       socket.on('connect_error', (err) => {
           console.error("Connection failed:", err);
@@ -217,10 +215,15 @@
       var user_Id = "{{user_id}}";
       var room_Id = "{{room_id}}";
       var agent_Id = "{{agent_id}}";
-      
-      socket.emit("join_room", { user_id: user_Id, agent_id : agent_Id });
-      
+      socket.emit("join_room", { user_id: user_Id,agent_id: agent_Id });
+     
+      socket.on("join_success", function(){
 
+        socket.emit("chat_data", {
+            room_id: room_Id
+        });
+      });
+      
 
       socket.on("chat_history", function (data) {
         var chatBox = document.getElementById("chat-box");
