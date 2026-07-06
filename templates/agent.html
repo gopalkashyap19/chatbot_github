@@ -145,7 +145,7 @@ button, input {
   var userId = "{{user_id}}";
   var roomId = "{{room_id}}";
   var agentId = "{{agent_id}}";
-  socket.emit("join_room",{user_id : userId, agent_id : agentId});
+  
   // Listen for all_users event
   socket.on("all_users", function(data){// Debugging ke liye
     var container = document.querySelector("#users");
@@ -164,7 +164,15 @@ button, input {
 
       btn.addEventListener("click",function(){
         console.log("chat button clicked for user",user.user_id);
-        window.location.href = "/agent_chat?user_id=" + user.user_id;
+        socket.emit("join_room",{user_id : user.user_id, agent_id : agentId});
+        socket.on("join_success", function(data){
+          window.location.href = data.url;
+        });
+        socket.on("redirect", function(data){
+          alert("! Another agent is already in chat !");
+          window.location.href=data.url;  
+        });
+        
       });
       
 
