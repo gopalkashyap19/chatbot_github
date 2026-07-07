@@ -375,7 +375,6 @@ button:hover {
         socket.emit("join_user_room",{user_id : userId});
         socket.on("join_user_success", function(data){
           window.location.href = data.url;
-          });
         });
       });
     
