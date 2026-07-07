@@ -38,6 +38,12 @@ def favicon():
     return send_from_directory(app.static_folder, 'favicon.ico')
 
 
+@socketio.on("join_user_room") 
+def handle_join_user(data):
+    user_id = session.get('user_id')
+    room = f"{user_id}room"
+    join_room(room)
+    emit("join_user_success", {"url": "/chatbot"}, room=request.sid)
 
 @socketio.on("join_room") 
 def handle_join(data):
@@ -53,7 +59,7 @@ def handle_join(data):
     if not agent_check:
             return
    
-    elif agent_check[0] == None:
+    elif agent_check[0] == "Agent_None" or agent_check[0] is None:
         cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s", (agent, room))
         conn.commit()
 
