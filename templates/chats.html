@@ -215,9 +215,9 @@
       var user_Id = "{{user_id}}";
       var room_Id = "{{room_id}}";
       var agent_Id = "{{agent_id}}";
-      socket.emit("join_room", { user_id: user_Id,agent_id: agent_Id });
+      socket.emit("join_user_room", { user_id: user_Id});
      
-      socket.on("join_success", function(){
+      socket.on("join_user_success", function(){
 
         socket.emit("chat_data", {
             room_id: room_Id
