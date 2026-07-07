@@ -43,7 +43,7 @@ def handle_join_user(data):
     user_id = session.get('user_id')
     room = f"{user_id}room"
     join_room(room)
-    emit("join_user_success", {"url": "/chatbot"}, room=request.sid)
+    emit("join_user_success", {"url": "/chats"}, room=request.sid)
 
 @socketio.on("join_room") 
 def handle_join(data):
