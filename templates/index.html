@@ -371,8 +371,12 @@ button:hover {
       document.getElementById("go_to_chat").addEventListener("click",function(){
         socket.emit("USERS", {});
         var userId = "{{user_id}}";
-        var roomId = "{{room_id}}";
-        socket.emit("join_room",{user_id : userId});
+        var room_Id = "{{room_id}}";
+        socket.emit("join_user_room",{user_id : userId});
+        socket.on("join_user_success", function(data){
+          window.location.href = data.url;
+          });
+        });
       });
     
     </script>
