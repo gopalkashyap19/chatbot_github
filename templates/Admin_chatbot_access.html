@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Chatbot</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}?v=1">
+    <link rel="icon" type="image/png" sizes="96x96" href="{{ url_for('static', filename='favicon-96x96.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <style>
+    body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f4f6f9; /* light gray background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+  height: 100vh;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+.chat-header {
+  flex: 0 0 auto;
+  position: fixed;            /* stick to top */
+  top: 0; 
+  left: 0;
+  right: 0;
+  z-index: 10; 
+  background: #6c5ce7; /* purple header */
+  color: #fff;
+  padding: 15px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.agent_chat-box {
+  margin-top: 40px;;   /* space for header */
+  margin-bottom: 70px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 15px;
+  background: #f9f9f9; /* softer background */
+  display: flex;
+  flex-direction: column;
+}
+
+.message {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  max-width: 70%;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  position: relative;
+}
+
+.user {
+  background: #00cec9; /* teal bubble */
+  color: #fff;
+  align-self: flex-end;
+  border-radius: 20px 20px 0 20px;
+  padding: 0.6rem 0.8rem;
+}
+
+.agent {
+  background: #ffeaa7; /* soft yellow bubble */
+  color: #2d3436;
+  border: 1px solid #ddd;
+  align-self: flex-start;
+  border-radius: 20px 20px 20px 0;
+  padding: 0.6rem 0.8rem;
+}
+
+.chatbot {
+  background: #dfe6e9; /* gray bubble */
+  color: #2d3436;
+  align-self: flex-start;
+  border-radius: 20px;
+  padding: 0.6rem 0.8rem;
+}
+
+.user::after {
+  right: -8px;
+  border-left: 8px solid #00cec9;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+.agent::after {
+  left: -8px;
+  border-right: 8px solid #ffeaa7;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+.chat-form2 {
+  flex: 0 0 auto;              /* fixed height */
+  position: fixed;            /* stick to top */
+  bottom: 0; 
+  left: 0;
+  right: 0;
+  z-index: 10; 
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #ddd;
+  background: #f0f0f0;
+}
+
+.chat-form2 input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 20px;
+  outline: none;
+  background: #fff;
+}
+.handover_chat{
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #fff;
+  color: #6c5ce7;
+  border: none;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+.handover_chat:hover {
+  background: #eae6ff;
+  color: #341f97;
+  transform: translateY(-50%) scale(1.05);
+}
+#all_agents {
+  position: absolute;
+  top: 60px; /* just below header */
+  right: 20px;
+  background: linear-gradient(135deg,  #962fbf, #4f5bd5); /* Instagram gradient */
+  border-radius: 12px;
+  padding: 15px;
+  display: none; /* hidden by default */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  color: white;
+}
+
+#all_agents button {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  display: block;
+  margin: 8px 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#all_agents button:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.05);
+}
+
+
+
+.back {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #fff;
+  color: #6c5ce7;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+.back:hover {
+  background: #eae6ff;
+  color: #341f97;
+  transform: translateY(-50%) scale(1.05);
+}
+
+.chat-form2 button {
+  margin-left: 10px;
+  padding: 10px 20px;
+  background: #6c5ce7;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.chat-form2 button:hover {
+  background: #a29bfe; /* lighter purple */
+}
+
+@media (max-width: 480px) {
+  .chat-container {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;   /* remove rounded corners for full-screen look */
+  }
+
+  .message {
+    max-width: 95%;     /* bubbles fit better on small screens */
+    font-size: 0.85rem; /* slightly smaller text */
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <div class="chat-container">
+      <header class="chat-header">
+        <a href="{{url_for('Admin_pannel')}}"><button  class="back">←</button></a>Agent's Chatbot
+        <a href="#"><button class="handover_chat" id="handover_chat">Handover<br>Chat</button></a>
+      </header>
+      <div class="all_agents" id="all_agents">
+
+      </div>
+      <div class="agent_chat-box" id="agent_chat-box">
+        {% for res in ress %}
+        <div class="{{res.role}}">{{res.role}} : {{res.message}}</div>
+        {% endfor %}
+
+        <!-- Messages will appear here -->
+      </div>
+      <form class="chat-form2" id="chat-form2">
+        <input
+          type="text"
+          id="response"
+          name="response"
+          placeholder="Type your message..."
+          required
+        />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+      var socket = io();
+      var user_Id = "{{user_id}}";
+      var room_Id = "{{room_id}}";
+      var agent_Id = "{{agent_id}}";
+  
+      socket.emit("admin_join", { user_id: user_Id,agent_id: agent_Id });
+      
+      socket.on("admin_join_success", function(){
+
+        socket.emit("chat_data", {
+            room_id: room_Id
+        });
+      });
+      
+      
+
+      socket.on("chat_history", function(data) {
+        var chatBox = document.getElementById("agent_chat-box");
+        chatBox.innerHTML = ""; // clear existing messages
+
+        data.forEach(function(data) {
+          var div = document.createElement("div");
+          div.className = data.role;
+          div.innerText = data.role + " : " + data.message;
+          chatBox.appendChild(div);
+        });
+      });
+      document.getElementById("chat-form2").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var res_mess = document.getElementById("response").value;
+          socket.emit("agent_res", {response: res_mess,user_id: user_Id,room_id: room_Id,agent_id: agent_Id});
+          document.getElementById("response").value = "";
+        });
+      socket.on("new_message", function(data) {
+        var div = document.createElement("div");
+        div.className = data.role;
+        div.innerText = data.role + " :" + data.message;
+        document.querySelector("#agent_chat-box").appendChild(div);
+      });
+      // Initially hide the all_agents box
+      document.getElementById("all_agents").style.display = "none";
+
+      // Toggle visibility when handover_chat button is clicked
+      document.getElementById("handover_chat").addEventListener("click", function(e){
+        e.preventDefault();
+        var container = document.getElementById("all_agents");
+
+        // Toggle show/hide
+        if (container.style.display === "none") {
+          container.style.display = "block";
+          // Request agent list from server when opening
+          socket.emit("Agents", {});
+        } 
+        else {
+          container.style.display = "none";
+        }
+      });
+      socket.on("all_agents",function(data){
+        var container = document.querySelector("#all_agents");
+        container.innerHTML = "";
+
+        data.forEach(function(agent){
+          var btn = document.createElement("button");
+          btn.innerText = "Handover To " + agent;
+
+
+          btn.addEventListener("click",function(){
+            socket.emit("handover",{"handover_agent": agent,"room_id": room_Id});
+            alert("Chat is handed over to the Agent : " + agent);
+            window.location.href = "/agent_dashboard";
+            
+          });
+          container.appendChild(btn);
+        });
+      });
+      
+    </script>
+  </body>
+</html>
