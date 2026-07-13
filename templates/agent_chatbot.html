@@ -84,6 +84,14 @@
   border-radius: 20px 20px 20px 0;
   padding: 0.6rem 0.8rem;
 }
+.Admin {
+  background: #106de0; /* soft yellow bubble */
+  color: #ffffff;
+  border: 1px solid #ddd;
+  align-self: flex-start;
+  border-radius: 20px 20px 20px 0;
+  padding: 0.6rem 0.8rem;
+} 
 
 .chatbot {
   background: #dfe6e9; /* gray bubble */
@@ -177,9 +185,6 @@
   background: rgba(255,255,255,0.3);
   transform: scale(1.05);
 }
-
-
-
 .back {
   position: absolute;
   left: 15px;
@@ -235,7 +240,7 @@
   <body>
     <div class="chat-container">
       <header class="chat-header">
-        <a href="{{url_for('agent_dashboard')}}"><button  class="back">←</button></a>Agent's Chatbot
+        <a href="#"><button  class="back" id="back">←</button></a>Agent's Chatbot
         <a href="#"><button class="handover_chat" id="handover_chat">Handover<br>Chat</button></a>
       </header>
       <div class="all_agents" id="all_agents">
@@ -273,6 +278,11 @@
         socket.emit("chat_data", {
             room_id: room_Id
         });
+      });
+      document.getElementById("back").addEventListener("click", function(e){
+        e.preventDefault();
+        socket.emit("remove_agent",{agent_id: agent_Id,room_id: room_Id});
+        window.location.href = "/agent_dashboard";
       });
       
       socket.on('redirect',function(data){
@@ -316,7 +326,8 @@
           container.style.display = "block";
           // Request agent list from server when opening
           socket.emit("Agents", {});
-        } else {
+        } 
+        else {
           container.style.display = "none";
         }
       });
