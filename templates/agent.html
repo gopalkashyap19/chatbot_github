@@ -21,7 +21,7 @@ button, input {
 }
 
 .header {
-  background: linear-gradient(90deg, #2c3e50, #34495e);
+  background: linear-gradient(90deg, #0960b6, #34495e);
   color: white;
   text-align: center;
   padding: 25px;
@@ -167,6 +167,7 @@ button, input {
         socket.emit("join_room",{user_id : user.user_id, agent_id : agentId});
         socket.on("join_success", function(data){
           window.location.href = data.url;
+          socket.emit("USERS", {});
         });
         socket.on("redirect", function(data){
           alert("! Another agent is already in chat !");
@@ -180,6 +181,7 @@ button, input {
       div.appendChild(document.createElement("br"));
       div.appendChild(btn);
       container.appendChild(div);
+      
     });
   });
 </script>
