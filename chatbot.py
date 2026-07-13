@@ -229,6 +229,7 @@ def handover(data):
     cursor.close()
     conn.close()
     socketio.emit("handover_confirmation", {"room_id": room, "new_agent": new_agent})
+    socketio.emit("refresh_agent", room=room)
 
 
 @app.route("/chats",methods=["GET"])
