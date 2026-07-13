@@ -10,120 +10,89 @@
 
   <style>
     body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: linear-gradient(135deg, #f4f6f9, #e9ecf2);
-  margin: 0;
-  padding: 0;
-}
-button, input {
-  font-size: 1rem;
-  padding: 12px;
-}
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f4f6f9, #e9ecf2);
+      margin: 0;
+      padding: 0;
+    }
+    button, input { font-size: 1rem; padding: 12px; }
+    .header {
+      background: linear-gradient(90deg, #096f52, #34495e);
+      color: white;
+      text-align: center;
+      padding: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .header h1 { margin: 0; font-size: 2.5em; letter-spacing: 2px; font-weight: 600; }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: transform 0.2s ease-in-out;
+    }
+    .container:hover { transform: translateY(-4px); }
+    .container p { font-size: 1.2em; color: #555; margin-bottom: 20px; }
+    .users {
+      font-size: 1.05em;
+      color: #2c3e50;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 25px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: left;
+      transition: all 0.3s ease;
+      border-left: 6px solid #096d6d;
+    }
+    .all_agents {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 25px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    }
 
-.header {
-  background: linear-gradient(90deg, #2c3e50, #34495e);
-  color: white;
-  text-align: center;
-  padding: 25px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
+    .all_agents button {
+        padding: 12px 22px;
+        background: linear-gradient(90deg, #096f52, #34495e);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+    }
 
-.header h1 {
-  margin: 0;
-  font-size: 2.5em;
-  letter-spacing: 2px;
-  font-weight: 600;
-}
-
-.container {
-  max-width: 900px;
-  margin: 40px auto;
-  background: #fff;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-  text-align: center;
-  transition: transform 0.2s ease-in-out;
-}
-
-.container:hover {
-  transform: translateY(-4px);
-}
-
-.container p {
-  font-size: 1.2em;
-  color: #555;
-  margin-bottom: 20px;
-}
-
-.chat-btn, .btn {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 12px 28px;
-  text-decoration: none;
-  border-radius: 30px;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-}
-
-.chat-btn {
-  background: linear-gradient(90deg, #cd14cd, #9b59b6);
-  color: white;
-}
-
-.btn {
-  background: linear-gradient(90deg, #3498db, #2980b9);
-  color: white;
-}
-
-.chat-btn:hover {
-  background: linear-gradient(90deg, #8e44ad, #6c3483);
-  transform: scale(1.05);
-}
-
-.btn:hover {
-  background: linear-gradient(90deg, #1f78c1, #145a86);
-  transform: scale(1.05);
-}
-
-.users {
-  font-size: 1.05em;
-  color: #2c3e50;
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 25px;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  text-align: left;
-  transition: all 0.3s ease;
-  border-left: 6px solid #3498db; /* accent stripe */
-}
-
-.users:hover {
-  background: #f9f9f9;
-  transform: translateY(-3px);
-}
-
-.users button {
-  margin-top: 15px;
-  padding: 10px 20px;
-  background: linear-gradient(90deg, #3498db, #2980b9);
-  color: #fff;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
-
-.users button:hover {
-  background: linear-gradient(90deg, #1f78c1, #145a86);
-  transform: scale(1.05);
-}
-
-
+    .all_agents button:hover {
+        transform: scale(1.05);
+    }
+    .users:hover { background: #f9f9f9; transform: translateY(-3px); }
+    .users button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: linear-gradient(90deg, #096d6d, #096d6d);
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    .users button:hover {
+      background: linear-gradient(90deg, #096d6d, #096d6d);
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
@@ -132,63 +101,118 @@ button, input {
   </div>
   <div class="container">
     <p>Welcome to the Admin Portal. Use this page to manage agents.</p>
-    <br>
-    <br>
   </div>
-  <div class="users" id="users"> 
+  <div class="users" id="users"></div>
+  <div class="all_agents" id="all_agents"></div>
 
-  </div>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-  var socket = io();
-  socket.emit("USERS", {});
-  var userId = "{{user_id}}";
-  var roomId = "{{room_id}}";
-  var agentId = "{{agent_id}}";
-  
-  // Listen for all_users event
-  socket.on("all_users", function(data){// Debugging ke liye
-    var container = document.querySelector("#users");
-    container.innerHTML = "";
-    data.forEach(function(user){
-      var div = document.createElement("div");
-      div.className = "users";
-      div.innerHTML = "user id: " + user.user_id +
-                      " | user name: " + user.name +
-                      " | email: " + user.email +
-                      " | service: " + user.service +
-                      " | room id: " + user.room_id +
-                      " | agent id: " + user.agent_id;
-      
-      var btn = document.createElement("button");
-      btn.innerText = "Handover chat";
+    var socket = io();
 
-      var btn_chats = document.createElement("button");
-      btn_chats.innerText = "View Chats";
+    socket.emit("USERS", {});
 
-      btn_chats.addEventListener("click",function(){
-        console.log("view chats button clicked for user",user.user_id);
-        socket.emit("admin_join",{user_id : user.user_id});
-        socket.on("admin_join_success", function(data){
-          window.location.href = data.url;
+    // Fetch all users
+    socket.on("all_users", function(data) {
+
+        var container = document.getElementById("users");
+        container.innerHTML = "";
+
+        data.forEach(function(user) {
+
+            // Create user card
+            var div = document.createElement("div");
+            div.className = "users";
+
+            div.innerHTML =
+                "user id: " + user.user_id +
+                " | user name: " + user.name +
+                " | email: " + user.email +
+                " | service: " + user.service +
+                " | room id: " + user.room_id +
+                " | agent assigned: " + user.agent_asigned;
+
+            // ---------------- VIEW CHATS BUTTON ----------------
+            var btn_chats = document.createElement("button");
+            btn_chats.innerText = "View Chats";
+
+            btn_chats.addEventListener("click", function() {
+                socket.emit("admin_join", {
+                    user_id: user.user_id
+                });
+            });
+
+            // Redirect after joining
+            socket.once("admin_join_success", function(data) {
+                window.location.href = data.url;
+            });
+
+            // ---------------- AGENT BOX ----------------
+            var agentsBox = document.createElement("div");
+            agentsBox.className = "all_agents";
+            agentsBox.style.display = "none";
+
+            // ---------------- HANDOVER BUTTON ----------------
+            var btn_handover = document.createElement("button");
+            btn_handover.innerText = "Handover Chat";
+
+            btn_handover.addEventListener("click", function(e) {
+
+                e.preventDefault();
+
+                // Toggle close
+                if (agentsBox.style.display === "flex") {
+                    agentsBox.style.display = "none";
+                    return;
+                }
+
+                // Open box
+                agentsBox.style.display = "flex";
+                agentsBox.innerHTML = "";
+
+                // Ask server for agents
+                socket.emit("Agents", {});
+
+                // Receive agent list once
+                socket.once("all_agents", function(agentList) {
+
+                    agentList.forEach(function(agent) {
+
+                        var agentBtn = document.createElement("button");
+
+                        agentBtn.innerText =
+                            "Handover To " + agent;
+
+                        agentBtn.addEventListener("click", function() {
+
+                            socket.emit("handover", {
+                                handover_agent: agent,
+                                room_id: user.room_id
+                            });
+
+                            alert(
+                                "Chat handed over to " +
+                                agent
+                            );
+
+                            agentsBox.style.display = "none";
+                        });
+
+                        agentsBox.appendChild(agentBtn);
+                    });
+                });
+            });
+
+            // Add elements to user card
+            div.appendChild(document.createElement("br"));
+            div.appendChild(btn_chats);
+            div.appendChild(btn_handover);
+            div.appendChild(document.createElement("br"));
+            div.appendChild(agentsBox);
+
+            // Add card to page
+            container.appendChild(div);
         });
-      });
-      btn.addEventListener("click",function(){
-        socket.emit("handover",{"handover_agent": agent,"room_id": room_Id});
-        alert("Chat is handed over to the Agent : " + agent);
-        window.location.href = "/Admin_pannel";
-            
-          });
-      
-      div.appendChild(document.createElement("br"));
-      div.appendChild(btn);
-      div.appendChild(btn_chats);
-      container.appendChild(div);
-      
     });
-  });
 </script>
-
-
 </body>
 </html>
