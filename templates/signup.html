@@ -99,7 +99,7 @@
 <body>
   <div class="signup-box">
     <h2>Agent Signup</h2>
-    <form action="{{url_for('auth.agent_signup')}}" method="post">
+    <form action="{{url_for('auth.agent_signup')}}" method="post" id="signup_form">
       <input type="text" name="agent_name" placeholder="Full Name" required>
       <input type="email" name="agent_email" placeholder="Email" required>
       <input type="password" name="agent_password" placeholder="Password" required>
@@ -113,5 +113,12 @@
     </div>
     </form>
   </div>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    var socket = io();
+    document.getElementById("signup_form").addEventListener("submit",function(e){
+      socket.emit("Admin_analysis",{});
+    });
+  </script>
 </body>
 </html>
