@@ -10,92 +10,161 @@
 
   <style>
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(135deg, #f4f6f9, #e9ecf2);
-      margin: 0;
-      padding: 0;
-    }
-    button, input { font-size: 1rem; padding: 12px; }
-    .header {
-      background: linear-gradient(90deg, #096f52, #34495e);
-      color: white;
-      text-align: center;
-      padding: 25px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    .header h1 { margin: 0; font-size: 2.5em; letter-spacing: 2px; font-weight: 600; }
-    .container {
-      max-width: 900px;
-      margin: 40px auto;
-      background: #fff;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-      text-align: center;
-      transition: transform 0.2s ease-in-out;
-    }
-    .container:hover { transform: translateY(-4px); }
-    .container p { font-size: 1.2em; color: #555; margin-bottom: 20px; }
-    .users {
-      font-size: 1.05em;
-      color: #2c3e50;
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 25px;
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      text-align: left;
-      transition: all 0.3s ease;
-      border-left: 6px solid #096d6d;
-    }
-    .all_agents {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #f4f6f9, #e9ecf2);
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+/* ================= SIDEBAR ================= */
+
+.sidebar {
+    width: 220px;
+    height: 100vh;
+    background: linear-gradient(135deg, #096f52, #34495e);
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.sidebar a {
+    display: block;
+    color: white;
+    padding: 12px;
+    margin: 10px 0;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: 0.3s;
+}
+
+.sidebar a:hover {
+    background: #19ad08;
+}
+
+/* ================= MAIN CONTENT ================= */
+
+.main-content {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+}
+
+/* ================= HEADER ================= */
+
+.header {
+    background: linear-gradient(90deg, #096f52, #34495e);
+    color: white;
+    text-align: center;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 2.5em;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+/* ================= CONTENT BOXES ================= */
+
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.container p {
+    font-size: 1.2em;
+    color: #555;
+}
+
+.users {
+    font-size: 1.05em;
+    color: #2c3e50;
     max-width: 900px;
     margin: 20px auto;
     padding: 25px;
-    background: #ffffff;
+    background: white;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    text-align: center;
+    text-align: left;
+    border-left: 6px solid #096d6d;
+}
+
+.users:hover {
+    background: #f9f9f9;
+    transform: translateY(-3px);
+}
+
+.users button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #096d6d;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.users button:hover {
+    transform: scale(1.05);
+}
+
+.all_agents {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 25px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
     justify-content: center;
-    }
+}
 
-    .all_agents button {
-        padding: 12px 22px;
-        background: linear-gradient(90deg, #096f52, #34495e);
-        color: white;
-        border: none;
-        border-radius: 25px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: 0.3s;
-    }
+.all_agents button {
+    padding: 12px 22px;
+    background: linear-gradient(90deg, #096f52, #34495e);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+}
 
-    .all_agents button:hover {
-        transform: scale(1.05);
-    }
-    .users:hover { background: #f9f9f9; transform: translateY(-3px); }
-    .users button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      background: linear-gradient(90deg, #096d6d, #096d6d);
-      color: #fff;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.3s ease, transform 0.2s ease;
-    }
-    .users button:hover {
-      background: linear-gradient(90deg, #096d6d, #096d6d);
-      transform: scale(1.05);
-    }
+.all_agents button:hover {
+    transform: scale(1.05);
+}
+
+/* ================= BACK BUTTON ================= */
+
+
   </style>
 </head>
 <body>
+  <div class="sidebar">
+    <h2>Admin Portal</h2>
+    <a href="{{url_for('Admin_analysis')}}"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="{{url_for('Admin_pannel')}}"><i class="fas fa-users"></i> Users/Agents</a>
+    <a href="#"><i class="fas fa-chart-line"></i> Analytics</a>
+    <a href="#"><i class="fas fa-cog"></i> Settings</a>
+  </div>
+  <div class="main-content">
   <div class="header">
     <h1>Admin Portal</h1>
   </div>
@@ -104,25 +173,22 @@
   </div>
   <div class="users" id="users"></div>
   <div class="all_agents" id="all_agents"></div>
+</div>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
     var socket = io();
-
     socket.emit("USERS", {});
 
     // Fetch all users
     socket.on("all_users", function(data) {
-
         var container = document.getElementById("users");
         container.innerHTML = "";
 
         data.forEach(function(user) {
-
             // Create user card
             var div = document.createElement("div");
             div.className = "users";
-
             div.innerHTML =
                 "user id: " + user.user_id +
                 " | user name: " + user.name +
@@ -136,9 +202,7 @@
             btn_chats.innerText = "View Chats";
 
             btn_chats.addEventListener("click", function() {
-                socket.emit("admin_join", {
-                    user_id: user.user_id
-                });
+                socket.emit("admin_join", {user_id: user.user_id});
             });
 
             // Redirect after joining
@@ -156,7 +220,6 @@
             btn_handover.innerText = "Handover Chat";
 
             btn_handover.addEventListener("click", function(e) {
-
                 e.preventDefault();
 
                 // Toggle close
@@ -174,33 +237,19 @@
 
                 // Receive agent list once
                 socket.once("all_agents", function(agentList) {
-
                     agentList.forEach(function(agent) {
-
                         var agentBtn = document.createElement("button");
-
-                        agentBtn.innerText =
-                            "Handover To " + agent;
-
+                        agentBtn.innerText = "Handover To " + agent;
                         agentBtn.addEventListener("click", function() {
-
-                            socket.emit("handover", {
-                                handover_agent: agent,
-                                room_id: user.room_id
-                            });
-
-                            alert(
-                                "Chat handed over to " + agent
-                            );
+                            socket.emit("handover", {handover_agent: agent,room_id: user.room_id});
+                            alert("Chat handed over to " + agent);
                             agentsBox.style.display = "none";
                             window.location.href="/Admin_pannel";
                         });
-
                         agentsBox.appendChild(agentBtn);
                     });
                 });
             });
-
             // Add elements to user card
             div.appendChild(document.createElement("br"));
             div.appendChild(btn_chats);
