@@ -124,24 +124,28 @@ def chatbot():
 
         elif "country" in request.form:
             country = request.form["country"]
+            session['country'] = country
             cursor.execute("UPDATE chat SET country = %s WHERE id = (SELECT id FROM (SELECT MAX(id) AS id FROM chat) AS t);", (country,))
             conn.commit()
             step = 3
 
         elif "mobile" in request.form:
             mobile = request.form["mobile"]
+            session['mobile'] = mobile
             cursor.execute("UPDATE chat SET mobile = %s WHERE id = (SELECT id FROM (SELECT MAX(id) AS id FROM chat) AS t);", (mobile,))
             conn.commit()
             step = 4
 
         elif "email" in request.form:
             email = request.form["email"]
+            session['email'] = email
             cursor.execute("UPDATE chat SET email = %s WHERE id = (SELECT id FROM (SELECT MAX(id) AS id FROM chat) AS t);", (email,))
             conn.commit()
             step = 5
 
         elif "service" in request.form:
             service = request.form["service"]
+            session['service'] = service
             cursor.execute("UPDATE chat SET service = %s WHERE id = (SELECT id FROM (SELECT MAX(id) AS id FROM chat) AS t);", (service,))
             conn.commit()
             step = 6
@@ -177,9 +181,29 @@ def agent_signup():
     return render_template("login.html")
 
 
+@app.route("/Admin_login",methods=["GET"])
+def Admin_login():
+    return render_template("Admin_Portal_Analysis.html")
 @app.route("/Admin_pannel",methods=["GET"])
 def Admin_pannel():
     return render_template("Admin_pannel.html")
+
+@app.route("/Admin_analysis",methods=["GET"])
+def Admin_analysis():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM chat")
+    total_users = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM agents")
+    total_agents = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM chatbot_chats WHERE role = %s",("user",))
+    total_user_chats = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM user_satisfied")
+    satisfied = cursor.fetchone()[0]
+    resolution = (satisfied/total_users)*100
+    resolution_rate = int(resolution)
+    return render_template("Admin_Portal_Analysis.html",users=total_users,user_chats=total_user_chats,total_agents=total_agents,resolution_rate=resolution_rate)
+
 
 @auth.route("/agent_login",methods=["POST"])
 def agent_login():
@@ -201,9 +225,44 @@ def agent_login():
 
 app.register_blueprint(auth)
 
-@app.route("/agent_dashboard",methods=["GET"])
+@app.route("/agent_dashboard",methods=["GET"])   
 def agent_dashboard():
     return render_template("agent.html")
+
+
+@socketio.on("user_satisfied")
+def user_satisfied(data):
+    user_id = session['user_id']
+    user_name = session['name']
+    room = session['room_id']
+    email = session['email']
+    service = session['service']
+    mobile = session['mobile']
+    country = session['country']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("select room_id from user_satisfied")
+    rooms = cursor.fetchall()
+    all_rooms = []
+    for r in rooms:
+        all_rooms.append(r[0])
+    if room in all_rooms:
+        return
+    else:
+        cursor.execute("INSERT INTO user_satisfied (user_id,user,user_email,service,room_id,mobile,country) VALUES(%s,%s,%s,%s,%s,%s,%s)",(user_id,user_name,email,service,room,mobile,country))
+        conn.commit()
+    cursor.close()
+    conn.close()
+
+@socketio.on("remove_satisfied_user")
+def remove_satisfied_user():
+    room = session['room_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM user_satisfied WHERE room_id=%s",(room,))
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 @socketio.on("remove_agent")
 def remove_agent(data):
@@ -215,6 +274,25 @@ def remove_agent(data):
     conn.commit()
     cursor.close()
     conn.close()
+@socketio.on("satisfied_users")
+def show_satisfied_users():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT user,user_email,country,mobile,service FROM user_satisfied ORDER BY id DESC")
+    s_users = cursor.fetchall()
+    satisfied_users = []
+    cursor.close()
+    conn.close()
+    if s_users:
+        for s_user in s_users:
+            satisfied_users.append({
+                "user":s_user[0],
+                "email": s_user[1],
+                "country": s_user[2],
+                "mobile": s_user[3],
+                "service": s_user[4]    
+            })
+    socketio.emit("all_satisfied_users",satisfied_users)
 
 
 
@@ -346,7 +424,8 @@ def user_info(data):
                 "room_id": user[7] if user[7] else "N/A",
                 "agent_asigned": user[8] if user[8] else "Agent_None"
             })  
-    socketio.emit("all_users",users)  # broadcast zaruri hai
+    socketio.emit("all_users",users)
+      # broadcast zaruri hai
 
 
   
