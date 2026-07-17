@@ -385,6 +385,7 @@
           e.preventDefault();
           var msg = document.getElementById("message").value;
           socket.emit("user_response", {message: msg,user_id: user_Id,room_id: room_Id,agent_id: agent_Id});
+          socket.emit("Admin_analysis",{});
           document.getElementById("message").value = "";
         });
 
@@ -408,6 +409,7 @@
         satisfiedbtn.classList.add("active");
         socket.emit("user_satisfied",{});
         socket.emit("satisfied_users");
+        socket.emit("Admin_analysis",{});
         modal.style.display = "none";
       });
       cancelbtn.addEventListener("click",function(){
@@ -417,6 +419,7 @@
         satisfiedbtn.classList.remove("active");
         socket.emit("remove_satisfied_user");
         socket.emit("satisfied_users");
+        socket.emit("Admin_analysis",{});
         remove_modal.style.display = "none";
       });
       remove_cancelbtn.addEventListener("click",function(){
