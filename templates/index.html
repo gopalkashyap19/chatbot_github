@@ -370,6 +370,7 @@ button:hover {
       
       document.getElementById("go_to_chat").addEventListener("click",function(){
         socket.emit("USERS", {});
+        socket.emit("Admin_analysis",{});
         var userId = "{{user_id}}";
         var room_Id = "{{room_id}}";
         socket.emit("join_user_room",{user_id : userId});
