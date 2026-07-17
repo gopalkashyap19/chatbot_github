@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  
+  <title>Admin Portal - Analytics</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        display: flex;
+        height: 100vh;
+        background: #eef0f3;
+        color: #333;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 220px;
+        background: linear-gradient(180deg, #166f60, #1f5b63);
+        padding: 20px;
+        color: white;
+    }
+
+    .sidebar h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .sidebar a {
+        display: block;
+        color: #fff;
+        padding: 12px;
+        margin: 8px 0;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* Main Content */
+    .main {
+        flex: 1;
+        padding: 30px;
+        overflow-y: auto;
+        background: #eef0f3;
+    }
+
+    /* Cards */
+    .cards {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .card {
+        flex: 1;
+        min-width: 220px;
+        background: white;
+        padding: 20px;
+        border-radius: 18px;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        border-left: 5px solid #0f8a83;
+        transition: 0.3s;
+    }
+
+    .card:hover {
+        transform: translateY(-4px);
+    }
+
+    .card h3 {
+        margin: 10px 0;
+        font-size: 18px;
+        color: #555;
+    }
+
+    .card p {
+        font-size: 26px;
+        font-weight: bold;
+        color: #0f8a83;
+    }
+
+    /* Satisfied Users Box */
+    .satisfied_users {
+        font-size: 1.05em;
+        color: #333;
+        max-width: 900px;
+        margin: 15px auto;
+        padding: 18px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        text-align: left;
+        transition: all 0.3s ease;
+        border-left: 6px solid #0f8a83;
+    }
+
+    .satisfied_users:hover {
+        transform: translateY(-3px);
+    }
+
+    /* Chart Section */
+    .chart-container {
+        background: white;
+        padding: 25px;
+        border-radius: 18px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .chart-container h2 {
+        margin-bottom: 20px;
+        color: #333;
+        font-size: 1.6rem;
+    }
+</style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>Admin Portal</h2>
+    <a href="{{url_for('Admin_analysis')}}"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="{{url_for('Admin_pannel')}}"><i class="fas fa-users"></i> Users/Agents</a>
+    <a href="#"><i class="fas fa-chart-line"></i> Analytics</a>
+    <a href="#"><i class="fas fa-cog"></i> Settings</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <h1 align="center">Analytics Overview</h1>
+    <div class="cards">
+      <div class="card">
+        <h3>Users</h3>
+        <p id="totalUsers">{{users}}</p>
+      </div>
+      <div class="card">
+        <h3>User Chats</h3>
+        <p id="totalChats">{{user_chats}}</p>
+      </div>
+      <div class="card">
+        <h3>Agents</h3>
+        <p id="totalAgents">{{total_agents}}</p>
+      </div>
+      <div class="card">
+        <h3>Resolution Rate</h3>
+        <p id="resolutionRate">{{resolution_rate}}%</p>
+      </div>
+    </div>
+
+    <div class="user-container">
+      <h2 align="center">Satisfied users</h2> 
+      <div class="satisfied_users"></div>
+    </div>
+  </div>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    var socket = io();
+    socket.emit("satisfied_users");
+    socket.on("all_satisfied_users",function(data){
+      var container = document.querySelector(".satisfied_users");
+      container.innerHTML = "";
+      data.forEach(function(users){
+        var div = document.createElement("div");
+        div.className = "satisfied_users"
+        div.innerHTML = "user :" + users.user +
+                        " | email :" + users.email +
+                        " | country :" + users.country +
+                        " | mobile :" + users.mobile +
+                        " | service :" + users.service;
+        
+        div.appendChild(document.createElement("br"));
+        container.appendChild(div);
+      });
+    });
+    
+  </script>
+
+    
+
+</body>
+</html>
