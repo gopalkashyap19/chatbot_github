@@ -190,6 +190,10 @@ def Admin_pannel():
 
 @app.route("/Admin_analysis",methods=["GET"])
 def Admin_analysis():
+    return render_template("Admin_Portal_Analysis.html")
+
+@socketio.on("Admin_analysis")
+def Admin_analysis_socket(data):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM chat")
@@ -202,7 +206,7 @@ def Admin_analysis():
     satisfied = cursor.fetchone()[0]
     resolution = (satisfied/total_users)*100
     resolution_rate = int(resolution)
-    return render_template("Admin_Portal_Analysis.html",users=total_users,user_chats=total_user_chats,total_agents=total_agents,resolution_rate=resolution_rate)
+    socketio.emit("Admin_analysis_data",{"users":total_users,"user_chats":total_user_chats,"total_agents":total_agents,"resolution_rate":resolution_rate})
 
 
 @auth.route("/agent_login",methods=["POST"])
