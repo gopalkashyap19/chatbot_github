@@ -139,19 +139,19 @@
     <div class="cards">
       <div class="card">
         <h3>Users</h3>
-        <p id="totalUsers">{{users}}</p>
+        <p id="totalUsers"></p>
       </div>
       <div class="card">
         <h3>User Chats</h3>
-        <p id="totalChats">{{user_chats}}</p>
+        <p id="totalChats"></p>
       </div>
       <div class="card">
         <h3>Agents</h3>
-        <p id="totalAgents">{{total_agents}}</p>
+        <p id="totalAgents"></p>
       </div>
       <div class="card">
         <h3>Resolution Rate</h3>
-        <p id="resolutionRate">{{resolution_rate}}%</p>
+        <p id="resolutionRate">%</p>
       </div>
     </div>
 
@@ -163,6 +163,7 @@
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
     var socket = io();
+    socket.emit("Admin_analysis",{});
     socket.emit("satisfied_users");
     socket.on("all_satisfied_users",function(data){
       var container = document.querySelector(".satisfied_users");
@@ -179,6 +180,16 @@
         div.appendChild(document.createElement("br"));
         container.appendChild(div);
       });
+    });
+    socket.on("Admin_analysis_data",function(data){
+      var users = document.querySelector("#totalUsers");
+      var user_chats = document.querySelector("#totalChats");
+      var total_agents = document.querySelector("#totalAgents");
+      var resolution_rate = document.querySelector("#resolutionRate");
+      users.textContent = data.users;
+      user_chats.textContent = data.user_chats;
+      total_agents.textContent = data.total_agents;
+      resolution_rate.textContent = data.resolution_rate + "%";  
     });
     
   </script>
