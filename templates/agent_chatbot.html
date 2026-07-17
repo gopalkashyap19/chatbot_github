@@ -291,10 +291,10 @@
         alert("! Another agent is already in chat !")
       });
       socket.on("refresh_agent", function(data) {
-      if (String(data.room_id) === String(room_Id)) {
-          // Refresh only if the event is for this agent's room
-          window.location.reload();
-        }
+        if (String(data.room_id) === String(room_Id)) {
+            // Refresh only if the event is for this agent's room
+            window.location.reload();
+          }
       });
 
       socket.on("chat_history", function(data) {
