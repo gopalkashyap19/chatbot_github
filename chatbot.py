@@ -202,7 +202,7 @@ def Admin_analysis_socket(data):
     total_agents = cursor.fetchone()[0]
     cursor.execute("SELECT COUNT(*) FROM chatbot_chats WHERE role = %s",("user",))
     total_user_chats = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM user_satisfied")
+    cursor.execute("SELECT COUNT(*) FROM chat WHERE satisfied=%s",(1,))
     satisfied = cursor.fetchone()[0]
     resolution = (satisfied/total_users)*100
     resolution_rate = int(resolution)
@@ -236,25 +236,11 @@ def agent_dashboard():
 
 @socketio.on("user_satisfied")
 def user_satisfied(data):
-    user_id = session['user_id']
-    user_name = session['name']
     room = session['room_id']
-    email = session['email']
-    service = session['service']
-    mobile = session['mobile']
-    country = session['country']
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("select room_id from user_satisfied")
-    rooms = cursor.fetchall()
-    all_rooms = []
-    for r in rooms:
-        all_rooms.append(r[0])
-    if room in all_rooms:
-        return
-    else:
-        cursor.execute("INSERT INTO user_satisfied (user_id,user,user_email,service,room_id,mobile,country) VALUES(%s,%s,%s,%s,%s,%s,%s)",(user_id,user_name,email,service,room,mobile,country))
-        conn.commit()
+    cursor.execute("UPDATE chat SET satisfied=%s, satisfied_agent=agent_asigned WHERE room_id=%s",(1,room))
+    conn.commit()
     cursor.close()
     conn.close()
 
@@ -263,7 +249,7 @@ def remove_satisfied_user():
     room = session['room_id']
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM user_satisfied WHERE room_id=%s",(room,))
+    cursor.execute("UPDATE chat SET satisfied=%s AND satisfied_agent=%s WHERE room_id=%s",(0,"Agent_None",room))
     conn.commit()
     cursor.close()
     conn.close()
@@ -282,7 +268,7 @@ def remove_agent(data):
 def show_satisfied_users():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT user,user_email,country,mobile,service FROM user_satisfied ORDER BY id DESC")
+    cursor.execute("SELECT name,email,country,mobile,service,satisfied_agent FROM chat WHERE satisfied=%s",(1,))
     s_users = cursor.fetchall()
     satisfied_users = []
     cursor.close()
@@ -294,7 +280,8 @@ def show_satisfied_users():
                 "email": s_user[1],
                 "country": s_user[2],
                 "mobile": s_user[3],
-                "service": s_user[4]    
+                "service": s_user[4],
+                "Satisfied_By": s_user[5]
             })
     socketio.emit("all_satisfied_users",satisfied_users)
 
