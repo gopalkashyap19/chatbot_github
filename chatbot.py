@@ -64,6 +64,7 @@ def handle_join(data):
             return
     elif agent_check[0] == "Agent_None" or agent_check[0] is None:
         cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s", (agent, room))
+        cursor.execute("UPDATE chat SET last_assist = %s WHERE room_id = %s", (agent, room))
         conn.commit()
     elif agent_check and agent == agent_check[0]:
         join_room(room)
@@ -113,8 +114,8 @@ def chatbot():
     if request.method == "POST":
         if "name" in request.form:
             name = request.form["name"]
-            user_id = name.strip()
-            room_id = name.strip() + "room"
+            user_id = uuid.uuid4().hex[:8]
+            room_id = user_id + "room"
             session['user_id'] = user_id
             session['room_id'] = room_id
             session['name'] = name
@@ -246,10 +247,11 @@ def user_satisfied(data):
 
 @socketio.on("remove_satisfied_user")
 def remove_satisfied_user():
+    remove_placeholder = "Agent_None"
     room = session['room_id']
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE chat SET satisfied=%s AND satisfied_agent=%s WHERE room_id=%s",(0,"Agent_None",room))
+    cursor.execute("UPDATE chat SET satisfied=%s, satisfied_agent=%s WHERE room_id=%s",(0,remove_placeholder,room))
     conn.commit()
     cursor.close()
     conn.close()
@@ -400,7 +402,7 @@ def user_info(data):
     users = []
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id,name,country,mobile,email,service,user_id,room_id,agent_asigned FROM chat ORDER BY id DESC;")
+    cursor.execute("SELECT id,name,country,mobile,email,service,user_id,room_id,agent_asigned,last_assist FROM chat ORDER BY id DESC;")
     user_information = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -413,7 +415,8 @@ def user_info(data):
                 "email": user[4],
                 "service": user[5],
                 "room_id": user[7] if user[7] else "N/A",
-                "agent_asigned": user[8] if user[8] else "Agent_None"
+                "agent_asigned": user[8] if user[8] else "Agent_None",
+                "last_assist": user[9] if user[9] else "Agent_None"
             })  
     socketio.emit("all_users",users)
       # broadcast zaruri hai
