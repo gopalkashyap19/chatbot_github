@@ -1,15 +1,16 @@
 from flask import Flask,render_template,request,url_for,redirect,jsonify,Blueprint,session,make_response,flash,send_from_directory
-import google.generativeai as genai
 from db import get_db_connection 
 from email_validator import validate_email, EmailNotValidError
 from flask_login import login_required,login_user,logout_user,current_user
 from werkzeug.security import generate_password_hash,check_password_hash
-from flask_jwt_extended import JWTManager,create_access_token,jwt_required,get_jwt_identity
 from flask_session import Session
 from datetime import timedelta
 from flask_socketio import SocketIO,join_room,leave_room,send,emit
 import uuid
 import os
+from sentence_transformers import SentenceTransformer, util
+import pandas as pd
+from ai_model import get_chatbot_response
 
 
 app = Flask(__name__)
@@ -25,13 +26,9 @@ Session(app)
 
 socketio = SocketIO(app)
 
-genai.configure(api_key="AQ.Ab8RN6L8XDmbpF1TsvIDQBTXg7NAVkQdMmpS6m-jSyirL1nc8w")
 
-@app.after_request
-def add_header(response):
-    if request.path.endswith('favicon.ico'):
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    return response
+
+
 
 @app.route('/favicon.ico')
 def favicon():
@@ -49,7 +46,7 @@ def handle_join_user(data):
     user_id = session.get('user_id')
     room = f"{user_id}room"
     join_room(room)
-    emit("join_user_success", {"url": "/chats"}, room=request.sid)
+    emit("join_user_success", {"user_id": user_id,"room_id": room}, room=request.sid)
 
 @socketio.on("join_room") 
 def handle_join(data):
@@ -101,10 +98,6 @@ def chat_data(data):
     emit("chat_history", [{"role": r, "message": m} for r, m in history], room=room)
 
 
-def ai_chatbot_response(user_input):
-    model = genai.GenerativeModel("gemini-2.5-flash-lite")  # or "gemini-1.5-pro"
-    response = model.generate_content(user_input)
-    return response.text
 
 @app.route("/", methods=["GET","POST"])
 def chatbot():
@@ -333,10 +326,12 @@ def agent_res(resp):
     cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id,agent_asigned) VALUES(%s,%s,%s,%s,%s)",(role2,agent_message,user_id,room,agent[0]))
     conn.commit()
     cursor.execute("SELECT message FROM chatbot_chats WHERE role = 'user' ORDER BY id DESC LIMIT 1")
-    ress = cursor.fetchall()
+    ress = cursor.fetchall()  
     cursor.close()
     conn.close()
     socketio.emit("new_message",{"role":role2,"message":agent_message},room=room,)
+
+
 
 @socketio.on('Admin_res')
 def admin_res(resp):
@@ -352,29 +347,37 @@ def admin_res(resp):
     conn.commit()
     cursor.execute("SELECT message FROM chatbot_chats WHERE role = 'user' ORDER BY id DESC LIMIT 1")
     ress = cursor.fetchall()
+    
     cursor.close()
     conn.close()
     socketio.emit("new_message",{"role":role2,"message":admin_message},room=room,)
     
 @socketio.on('user_response')
 def user_response(data):
-    
     user_input = data["message"]
     user_id = session.get('user_id')
     room = session.get('room_id')
     agent = data['agent_id']
     role = "user"
+    bot_role = "bot"
+    bot_reply = get_chatbot_response(user_input)
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT agent_asigned from chat WHERE room_id = %s",(room,))
     agent = cursor.fetchone()
     cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id,agent_asigned) VALUES(%s,%s,%s,%s,%s)",(role,user_input,user_id,room,agent[0]))
     conn.commit()
+    cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id,agent_asigned) VALUES(%s,%s,%s,%s,%s)",(bot_role,bot_reply,user_id,room,bot_role))
+    conn.commit()
     cursor.execute("SELECT message FROM chatbot_chats WHERE role = 'agent' ORDER BY id DESC LIMIT 1")
     mess2 = cursor.fetchall()
+    cursor.execute("SELECT message FROM chatbot_chats WHERE role = 'bot'AND room_id=%s ORDER BY id DESC LIMIT 1",(room,))
+    user_bot = cursor.fetchall()
     cursor.close()
     conn.close()
     socketio.emit("new_message",{"role":role,"message":user_input},room=room)
+    socketio.emit("bot_message",{"role_auto":"bot","bot_reply":user_bot[0]},room=room)
+    
 
 
 
