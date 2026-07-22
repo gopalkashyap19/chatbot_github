@@ -26,11 +26,11 @@
   width: 100%;
   max-width: 600px;
   height: 100vh;
-  background: #fff;
+  background: #fbfbfc;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   overflow: hidden;
-}
+} 
 
 .chat-header {
   flex: 0 0 auto;
@@ -39,7 +39,7 @@
   left: 0;
   right: 0;
   z-index: 10; 
-  background: #6c5ce7; /* purple header */
+  background:   linear-gradient(135deg, #08beaf, #6b08ac, #09cba7); /* purple header */
   color: #fff;
   padding: 15px;
   text-align: center;
@@ -69,20 +69,24 @@
 }
 
 .user {
-  background: #00cec9; /* teal bubble */
+  background: linear-gradient(135deg, #08beaf, #0813ac, #09cba7); /* teal bubble */
   color: #fff;
   align-self: flex-end;
   border-radius: 20px 20px 0 20px;
   padding: 0.6rem 0.8rem;
+  margin-bottom: 15px;
+  margin-top: 15px;
 }
 
 .agent {
-  background: #ffeaa7; /* soft yellow bubble */
-  color: #2d3436;
+  background: linear-gradient(135deg, #08beaf, #6b08ac, #09cba7); /* soft yellow bubble */
+  color: #fefefe;
   border: 1px solid #ddd;
   align-self: flex-start;
   border-radius: 20px 20px 20px 0;
   padding: 0.6rem 0.8rem;
+  margin-bottom: 15px;
+  margin-top: 15px;
 }
 .Admin {
   background: #106de0; /* soft yellow bubble */
@@ -91,6 +95,8 @@
   align-self: flex-start;
   border-radius: 20px 20px 20px 0;
   padding: 0.6rem 0.8rem;
+  margin-bottom: 15px;
+  margin-top: 15px;
 } 
 
 .chatbot {
@@ -206,11 +212,19 @@
   color: #341f97;
   transform: translateY(-50%) scale(1.05);
 }
+.bot{
+        background: linear-gradient(135deg,  #2660e9, #401bb8, #419ab3); /* soft yellow bubble */
+        color: #ffffff;
+        border: 1px solid #ddd;
+        align-self: flex-start;
+        border-radius: 20px 20px 20px 0;
+        padding: 0.6rem 0.8rem;
+      }
 
 .chat-form2 button {
   margin-left: 10px;
   padding: 10px 20px;
-  background: #6c5ce7;
+  background: linear-gradient(135deg, #10a0d4, #5708ac, #09cba7);
   color: #fff;
   border: none;
   border-radius: 20px;
@@ -250,7 +264,7 @@
         {% for res in ress %}
         <div class="{{res.role}}">{{res.role}} : {{res.message}}</div>
         {% endfor %}
-
+        <div class="bot">bot : {{message}}</div>
         <!-- Messages will appear here -->
       </div>
       <form class="chat-form2" id="chat-form2">
@@ -318,6 +332,12 @@
         var div = document.createElement("div");
         div.className = data.role;
         div.innerText = data.role + " :" + data.message;
+        document.querySelector("#agent_chat-box").appendChild(div);
+      });
+      socket.on("bot_message", function(data) {
+        var div = document.createElement("div");
+        div.className = data.role_auto;
+        div.innerText = data.role_auto + " :" + data.bot_reply;
         document.querySelector("#agent_chat-box").appendChild(div);
       });
       // Initially hide the all_agents box
