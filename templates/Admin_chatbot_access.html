@@ -185,8 +185,14 @@
   background: rgba(255,255,255,0.3);
   transform: scale(1.05);
 }
-
-
+.bot{
+        background: #098705a4; /* soft yellow bubble */
+        color: #ffffff;
+        border: 1px solid #ddd;
+        align-self: flex-start;
+        border-radius: 20px 20px 20px 0;
+        padding: 0.6rem 0.8rem;
+      }
 
 .back {
   position: absolute;
@@ -254,6 +260,7 @@
         <div class="{{res.role}}">{{res.role}} : {{res.message}}</div>
         {% endfor %}
 
+        <div class="bot">bot : {{message}}</div>
         <!-- Messages will appear here -->
       </div>
       <form class="chat-form2" id="chat-form2">
@@ -306,6 +313,12 @@
         var div = document.createElement("div");
         div.className = data.role;
         div.innerText = data.role + " :" + data.message;
+        document.querySelector("#Admin_chat-access").appendChild(div);
+      });
+      socket.on("bot_message", function(data) {
+        var div = document.createElement("div");
+        div.className = data.role_auto;
+        div.innerText = data.role_auto + " :" + data.bot_reply;
         document.querySelector("#Admin_chat-access").appendChild(div);
       });
       // Initially hide the all_agents box
