@@ -176,6 +176,18 @@ def agent_signup():
     return render_template("login.html")
 
 
+@socketio.on("handover_to_bot")
+def bot_handover(data):
+    room = session['room_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE chat SET agent_connect=%s WHERE room_id=%s",(0,room))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+
 @app.route("/Admin_login",methods=["GET"])
 def Admin_login():
     return render_template("Admin_Portal_Analysis.html")
