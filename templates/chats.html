@@ -84,7 +84,7 @@
 
       }
       .Admin {
-        background: #106de0; /* soft yellow bubble */
+        background: linear-gradient(135deg, #8b9d05, #5a0505, #8b9d05); /* soft yellow bubble */
         color: #ffffff;
         border: 1px solid #ddd;
         align-self: flex-start;
@@ -268,6 +268,10 @@
         background: green;
         color: white;
       }
+      .get_agent.active {
+        background: green;
+        color: white;
+      }
 
 
       .chat-form button {
@@ -291,7 +295,7 @@
       }
 
       .chat-form button:hover {
-        background: #1f78c1;
+        background: background: linear-gradient(135deg, #089cbe, #0813ac, #09cba7);;
       }
       @media (max-width: 480px) {
           body {
@@ -408,11 +412,43 @@
         document.querySelector("#chat-box").appendChild(div);
       });
       socket.on("bot_message", function(data) {
+        if(data.status === 1){
+          return;
+        }
         var div = document.createElement("div");
         div.className = data.role_auto;
         div.innerText = data.role_auto + " :" + data.bot_reply;
         document.querySelector("#chat-box").appendChild(div);
-      });
+
+      if (data.handover === true) {
+        // Create dialog-like container
+        var handover = document.createElement("div");
+        handover.className = "handover_div";
+
+        var handoverText = document.createElement("span");
+        handoverText.innerText = "Want to connect with a human agent?";
+
+        // Create YES button
+        var handover_btn = document.createElement("button");
+        handover_btn.innerText = "YES";
+        handover_btn.type = "button";
+
+        // Attach click handler right here
+        handover_btn.addEventListener("click", function(e) {
+          e.preventDefault();
+          socket.emit("agent_connect", {});
+          socket.emit("USERS",{});
+          alert("An agent will join you shortly!");
+          humanInChat = true;
+          
+        });
+        handover.appendChild(handoverText);
+        handover.appendChild(document.createElement("br"));
+        handover.appendChild(handover_btn);
+        document.querySelector("#chat-box").appendChild(handover);
+      }
+    });
+
       satisfiedbtn.addEventListener("click",function(e){
         e.preventDefault();
         if(satisfiedbtn.classList.contains("active")){
