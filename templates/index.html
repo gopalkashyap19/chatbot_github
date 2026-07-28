@@ -351,13 +351,13 @@ button:hover {
       </form>
     {% elif step == 5 %}
       <form method="post" action="{{url_for('chatbot')}}">
-        <p>What service are you interested in?</p>
-        <button name="service" value="Web Development">Web Development</button>
-        <button name="service" value="Mobile App">Mobile App</button>
-        <button name="service" value="Digital Marketing">Digital Marketing</button>
-        <button name="service" value="Social Media">Social Media</button>
-        <button name="service" value="Content Writing">Content Writing</button>
-        <button name="service" value="UI/UX Design">UI/UX Design</button>
+        <p>What is the Query Related To?</p>
+        <button name="service" value="Room Bookings">Room Bookings</button>
+        <button name="service" value="Expenses">Expenses</button>
+        <button name="service" value="Staff Related">Staff Related</button>
+        <button name="service" value="Attendence Related">Attendence Related</button>
+        <button name="service" value="Reports">Reports</button>
+        <button name="service" value="other">other</button>
       </form>
     {% elif step == 6 %}
       <p>You have completed the questions. Now you can continue with the chat.</p>
@@ -369,8 +369,8 @@ button:hover {
       var socket = io();
       
       document.getElementById("go_to_chat").addEventListener("click",function(){
-        socket.emit("USERS", {});
         socket.emit("Admin_analysis",{});
+        socket.emit("Admin_USERS_access", {});
         var userId = "{{user_id}}";
         var room_Id = "{{room_id}}";
         socket.emit("join_user_room",{user_id : userId});
