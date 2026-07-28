@@ -219,13 +219,12 @@ def get_chatbot_response(user_query):
 
     if best_score >= SIMILARITY_THRESHOLD:
 
-        return {answer}
+        return {"answer": answer,
+                "handover": False}
 
 
     else:
 
-        return {"I'm sorry, I couldn't find "
-                "a suitable answer to your question. "
-                "Would you like to connect with "
-                "a human agent?"}
+        return {"answer": "I'm sorry, I couldn't find a suitable answer to your question.",
+                "handover": True}
    
