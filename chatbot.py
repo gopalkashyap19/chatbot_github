@@ -59,7 +59,7 @@ def handle_join(data):
     agent_check = cursor.fetchone()
     if not agent_check:
             return
-    elif agent_check[0] == "Agent_None" or agent_check[0] is None:
+    elif agent_check[0] == "Agent_None" or agent_check[0] == "bot" or agent_check[0] is None:
         cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s", (agent, room))
         cursor.execute("UPDATE chat SET last_assist = %s WHERE room_id = %s", (agent, room))
         conn.commit()
@@ -96,6 +96,7 @@ def chat_data(data):
     cursor.close()
     conn.close()
     emit("chat_history", [{"role": r, "message": m} for r, m in history], room=room)
+
 
 
 
@@ -255,7 +256,7 @@ def remove_agent(data):
     room = str(data['room_id'])
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s",("Agent_None",room))
+    cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s",("bot",room))
     conn.commit()
     cursor.close()
     conn.close()
@@ -351,7 +352,20 @@ def admin_res(resp):
     cursor.close()
     conn.close()
     socketio.emit("new_message",{"role":role2,"message":admin_message},room=room,)
+
+@socketio.on("agent_connect")
+def agent_need(data):
+    room = session.get('room_id')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE chat SET agent_connect=%s WHERE room_id=%s",(1,room))
+    conn.commit()
+    cursor.close()
+    conn.close()
     
+
+
+
 @socketio.on('user_response')
 def user_response(data):
     user_input = data["message"]
@@ -363,12 +377,15 @@ def user_response(data):
     bot_reply = get_chatbot_response(user_input)
     conn = get_db_connection()
     cursor = conn.cursor()
+    cursor.execute("SELECT agent_connect FROM chat WHERE room_id=%s",(room,))
+    Agent_connect = cursor.fetchone()
     cursor.execute("SELECT agent_asigned from chat WHERE room_id = %s",(room,))
     agent = cursor.fetchone()
     cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id,agent_asigned) VALUES(%s,%s,%s,%s,%s)",(role,user_input,user_id,room,agent[0]))
     conn.commit()
-    cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id,agent_asigned) VALUES(%s,%s,%s,%s,%s)",(bot_role,bot_reply,user_id,room,bot_role))
-    conn.commit()
+    if Agent_connect[0] != 1:
+        cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id,agent_asigned) VALUES(%s,%s,%s,%s,%s)",(bot_role,bot_reply["answer"],user_id,room,bot_role))
+        conn.commit()
     cursor.execute("SELECT message FROM chatbot_chats WHERE role = 'agent' ORDER BY id DESC LIMIT 1")
     mess2 = cursor.fetchall()
     cursor.execute("SELECT message FROM chatbot_chats WHERE role = 'bot'AND room_id=%s ORDER BY id DESC LIMIT 1",(room,))
@@ -376,7 +393,7 @@ def user_response(data):
     cursor.close()
     conn.close()
     socketio.emit("new_message",{"role":role,"message":user_input},room=room)
-    socketio.emit("bot_message",{"role_auto":"bot","bot_reply":user_bot[0]},room=room)
+    socketio.emit("bot_message",{"role_auto":"bot","bot_reply":user_bot[0],"handover":bot_reply["handover"],"status":Agent_connect[0] if Agent_connect else 0},room=room)
     
 
 
@@ -396,7 +413,29 @@ def Agents(data):
     socketio.emit("all_agents",agent_ids)
 
 
+@socketio.on('Admin_USERS_access')
+def user_info(data):
+    # Yeh values login ke time set karni hongi
+    users = []
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id,name,country,mobile,email,service,user_id,room_id,agent_asigned,last_assist FROM chat ORDER BY id DESC;")
+    user_information = cursor.fetchall()
+    cursor.close()
+    conn.close()
 
+    if user_information:
+        for user in user_information:
+            users.append({
+                "user_id": user[6] if user[6] else user[0],   # agar session empty hai to DB id use karo
+                "name": user[1],
+                "email": user[4],
+                "service": user[5],
+                "room_id": user[7] if user[7] else "N/A",
+                "agent_asigned": user[8] if user[8] else "Agent_None",
+                "last_assist": user[9] if user[9] else "Agent_None"
+            })  
+    socketio.emit("admin_all_users_access",users)
 
 
 @socketio.on('USERS')
@@ -405,7 +444,7 @@ def user_info(data):
     users = []
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id,name,country,mobile,email,service,user_id,room_id,agent_asigned,last_assist FROM chat ORDER BY id DESC;")
+    cursor.execute("SELECT id,name,country,mobile,email,service,user_id,room_id,agent_asigned,last_assist FROM chat WHERE agent_connect=%s ORDER BY id DESC;",(1))
     user_information = cursor.fetchall()
     cursor.close()
     conn.close()
