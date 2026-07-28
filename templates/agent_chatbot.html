@@ -298,6 +298,7 @@
       document.getElementById("back").addEventListener("click", function(e){
         e.preventDefault();
         socket.emit("remove_agent",{agent_id: agent_Id,room_id: room_Id});
+        socket.emit("handover_to_bot",{});
         window.location.href = "/agent_dashboard";
         socket.emit("Admin_USERS_access", {});
       });
