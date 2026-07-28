@@ -315,7 +315,11 @@
         div.innerText = data.role + " :" + data.message;
         document.querySelector("#Admin_chat-access").appendChild(div);
       });
-      socket.on("bot_message", function(data) {
+
+      socket.on("bot_message",function(data){
+        if(data.status === 1){
+          return;
+        }
         var div = document.createElement("div");
         div.className = data.role_auto;
         div.innerText = data.role_auto + " :" + data.bot_reply;
