@@ -178,10 +178,10 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
     var socket = io();
-    socket.emit("USERS", {});
+    socket.emit("Admin_USERS_access", {});
 
     // Fetch all users
-    socket.on("all_users", function(data) {
+    socket.on("admin_all_users_access", function(data) {
         var container = document.getElementById("users");
         container.innerHTML = "";
 
