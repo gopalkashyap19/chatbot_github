@@ -280,6 +280,11 @@
       var user_Id = "{{user_id}}";
       var room_Id = "{{room_id}}";
       var agent_Id = "{{agent_id}}";
+
+      function scrollToBottom() {
+        const chatBox = document.getElementById("Admin_chat-access");
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
   
       socket.emit("admin_join", { user_id: user_Id,agent_id: agent_Id });
       
@@ -301,6 +306,7 @@
           div.className = data.role;
           div.innerText = data.role + " : " + data.message;
           chatBox.appendChild(div);
+          scrollToBottom();
         });
       });
       document.getElementById("chat-form2").addEventListener("submit", function (e) {
@@ -314,6 +320,7 @@
         div.className = data.role;
         div.innerText = data.role + " :" + data.message;
         document.querySelector("#Admin_chat-access").appendChild(div);
+        scrollToBottom();
       });
 
       socket.on("bot_message",function(data){
@@ -324,6 +331,7 @@
         div.className = data.role_auto;
         div.innerText = data.role_auto + " :" + data.bot_reply;
         document.querySelector("#Admin_chat-access").appendChild(div);
+        scrollToBottom();
       });
       // Initially hide the all_agents box
       document.getElementById("all_agents").style.display = "none";
