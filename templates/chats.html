@@ -285,6 +285,70 @@
         font-weight: bold;
         font-size: 1rem;
       }
+      /* Container for the handover message */
+      .handover_div {
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        color: #fff;
+        padding: 20px;
+        margin: 15px auto;
+        border-radius: 12px;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 500;
+        max-width: 80%;
+        animation: fadeIn 0.4s ease-in-out;
+      }
+
+      /* YES button styling */
+      .handover_btn {
+        margin-top: 12px;
+        padding: 10px 22px;
+        background: #ffffff;
+        color: #2575fc;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      }
+
+      /* Hover effect */
+      .handover_btn :hover {
+        background: #2575fc;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+      }
+      /* NO button styling */
+      .No_btn {
+        margin-top: 12px;
+        padding: 10px 22px;
+        background: #ffffff;
+        color: #2575fc;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      }
+
+      /* Hover effect */
+      .No_btn :hover {
+        background: #2575fc;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+      }
+
+      /* Subtle fade-in animation */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
       .bot{
         background: linear-gradient(135deg,  #2660e9, #401bb8, #419ab3); /* soft yellow bubble */
         color: #fefcfc;
@@ -371,6 +435,11 @@
       const remove_okbtn = document.getElementById("remove_okBtn");
       const remove_cancelbtn = document.getElementById("remove_cancelBtn");
 
+      function scrollToBottom() {
+        const chatBox = document.getElementById("chat-box");
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
       socket.emit("join_user_room", { user_id: user_Id});
 
       
@@ -393,6 +462,7 @@
           div.innerText = data.role + " : " + data.message;
           div.appendChild(document.createElement("br"));
           chatBox.appendChild(div);
+          scrollToBottom();
         });
       });
 
@@ -410,6 +480,7 @@
         div.className = data.role;
         div.innerText = data.role + " :" + data.message;
         document.querySelector("#chat-box").appendChild(div);
+        scrollToBottom();
       });
       socket.on("bot_message", function(data) {
         if(data.status === 1){
@@ -419,6 +490,7 @@
         div.className = data.role_auto;
         div.innerText = data.role_auto + " :" + data.bot_reply;
         document.querySelector("#chat-box").appendChild(div);
+        scrollToBottom();
 
       if (data.handover === true) {
         // Create dialog-like container
@@ -430,8 +502,14 @@
 
         // Create YES button
         var handover_btn = document.createElement("button");
+        handover_btn.className = "handover_btn";
         handover_btn.innerText = "YES";
         handover_btn.type = "button";
+
+        var No_btn = document.createElement("button");
+        No_btn.className = "No_btn";
+        No_btn.innerText = "NO";
+        No_btn.type = "button";
 
         // Attach click handler right here
         handover_btn.addEventListener("click", function(e) {
@@ -440,12 +518,22 @@
           socket.emit("USERS",{});
           alert("An agent will join you shortly!");
           humanInChat = true;
+          handover.style.display = "none";
           
         });
+        No_btn.addEventListener("click", function(e) {
+          e.preventDefault();
+          handover.style.display = "none";
+        });
+
+
         handover.appendChild(handoverText);
         handover.appendChild(document.createElement("br"));
         handover.appendChild(handover_btn);
+        handover.appendChild(document.createTextNode("\u00A0"));
+        handover.appendChild(No_btn);
         document.querySelector("#chat-box").appendChild(handover);
+        scrollToBottom();
       }
     });
 
