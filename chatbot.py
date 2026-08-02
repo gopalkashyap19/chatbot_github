@@ -59,7 +59,7 @@ def handle_join(data):
     agent_check = cursor.fetchone()
     if not agent_check:
             return
-    elif agent_check[0] == "Agent_None" or agent_check[0] == "bot" or agent_check[0] is None:
+    elif agent_check[0] == "Agent_None" or agent_check[0] is None:
         cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s", (agent, room))
         cursor.execute("UPDATE chat SET last_assist = %s WHERE room_id = %s", (agent, room))
         conn.commit()
@@ -188,6 +188,7 @@ def bot_handover(data):
 
 
 
+
 @app.route("/Admin_login",methods=["GET"])
 def Admin_login():
     return render_template("Admin_Portal_Analysis.html")
@@ -264,14 +265,16 @@ def remove_satisfied_user():
 
 @socketio.on("remove_agent")
 def remove_agent(data):
-    agent = str(data['agent_id'])
     room = str(data['room_id'])
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s",("bot",room))
     conn.commit()
+    cursor.execute("UPDATE chat SET agent_connect=%s WHERE room_id=%s",(0,room))
+    conn.commit()
     cursor.close()
     conn.close()
+    socketio.emit("refresh_removed_agent",{ "room_id": room }, room=room)
 @socketio.on("satisfied_users")
 def show_satisfied_users():
     conn = get_db_connection()
@@ -302,6 +305,8 @@ def handover(data):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("UPDATE chat SET agent_asigned = %s WHERE room_id = %s",(new_agent,room))
+    conn.commit()
+    cursor.execute("UPDATE chat SET agent_connect=%s WHERE room_id=%s",(1,room))
     conn.commit()
     cursor.close()
     conn.close()
@@ -368,9 +373,10 @@ def admin_res(resp):
 @socketio.on("agent_connect")
 def agent_need(data):
     room = session.get('room_id')
+    removed = "Agent_None"
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE chat SET agent_connect=%s WHERE room_id=%s",(1,room))
+    cursor.execute("UPDATE chat SET agent_connect=%s,agent_asigned=%s WHERE room_id=%s",(1,removed,room))
     conn.commit()
     cursor.close()
     conn.close()
@@ -487,4 +493,4 @@ def signup_page():
     return render_template("signup.html")
 
 if __name__ == "__main__":
-    socketio.run(app,debug=True)
+    socketio.run(app,debug=False)
