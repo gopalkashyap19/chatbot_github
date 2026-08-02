@@ -303,13 +303,20 @@
         e.preventDefault();
         socket.emit("remove_agent",{agent_id: agent_Id,room_id: room_Id});
         socket.emit("handover_to_bot",{});
-        window.location.href = "/agent_dashboard";
         socket.emit("Admin_USERS_access", {});
+        window.location.href = "/agent_dashboard";
+        
       });
       
       socket.on('redirect',function(data){
         window.location.href = data.url;
         alert("! Another agent is already in chat !")
+      });
+      socket.on("refresh_removed_agent", function(data) {
+        if (String(data.room_id) === String(room_Id)) {
+            // Refresh only if the event is for this agent's room
+            window.location.reload();
+          }
       });
       socket.on("refresh_agent", function(data) {
         if (String(data.room_id) === String(room_Id)) {
