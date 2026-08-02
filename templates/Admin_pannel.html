@@ -238,16 +238,29 @@
 
                 // Receive agent list once
                 socket.once("all_agents", function(agentList) {
+                    var bot = "bot"; 
+                    var handover_bot = document.createElement("button");
+                    handover_bot.innerText = "Handover To " + bot;
+                    handover_bot.addEventListener("click", function() {
+                        socket.emit("remove_agent",{room_id: user.room_id});
+                        alert("Chat handed over to " + bot);
+                        agentsBox.style.display = "none";
+                        socket.emit("USERS",{});
+                        window.location.href="/Admin_pannel";
+                    });
                     agentList.forEach(function(agent) {
                         var agentBtn = document.createElement("button");
                         agentBtn.innerText = "Handover To " + agent;
+                        
                         agentBtn.addEventListener("click", function() {
                             socket.emit("handover", {handover_agent: agent,room_id: user.room_id});
                             alert("Chat handed over to " + agent);
                             agentsBox.style.display = "none";
+                            socket.emit("USERS",{});
                             window.location.href="/Admin_pannel";
                         });
                         agentsBox.appendChild(agentBtn);
+                        agentsBox.appendChild(handover_bot);
                     });
                 });
             });
