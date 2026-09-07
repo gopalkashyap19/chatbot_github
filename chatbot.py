@@ -3,14 +3,29 @@ from db import get_db_connection
 from email_validator import validate_email, EmailNotValidError
 from flask_login import login_required,login_user,logout_user,current_user
 from werkzeug.security import generate_password_hash,check_password_hash
+from werkzeug.utils import secure_filename
 from flask_session import Session
 from datetime import timedelta
 from flask_socketio import SocketIO,join_room,leave_room,send,emit
 import uuid
 import os
-from sentence_transformers import SentenceTransformer, util
-import pandas as pd
-from ai_model import get_chatbot_response
+import json
+import shutil
+import time
+
+# --------------------------------------------------------------
+# RAG PIPELINE (PDF/DOCX -> LangChain -> HF Embeddings -> FAISS
+# -> semantic search -> local Hugging Face LLM -> answer)
+# --------------------------------------------------------------
+from model import (
+    extract_text_from_file,
+    process_user_guide,
+    generate_response_stream,
+    stop_generation,
+    remove_user_guide,
+    ACTIVE_GUIDE_FILE,
+    remove_specific_user_guide
+)
 
 
 app = Flask(__name__)
@@ -27,6 +42,131 @@ Session(app)
 socketio = SocketIO(app)
 
 
+# --------------------------------------------------------------
+# COMPANY GUIDE UPLOAD CONFIGURATION
+# --------------------------------------------------------------
+
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+
+# --------------------------------------------------------------
+# ACTIVE USER GUIDE INFORMATION
+# --------------------------------------------------------------
+
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
+
+GUIDE_METADATA_FILE = os.path.join(
+    BASE_DIR,
+    "active_user_guide.json"
+)
+
+ALLOWED_EXTENSIONS = {"pdf", "docx", "txt"}
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+
+def allowed_file(filename):
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+    )
+
+# --------------------------------------------------------------
+# SAVE ACTIVE GUIDE INFORMATION
+# --------------------------------------------------------------
+
+def save_active_guide(filename):
+
+    guide_data = {
+
+        "active": True,
+
+        "filename": filename
+
+    }
+
+
+    with open(
+
+        GUIDE_METADATA_FILE,
+
+        "w",
+
+        encoding="utf-8"
+
+    ) as file:
+
+        json.dump(
+
+            guide_data,
+
+            file
+
+        )
+
+
+# --------------------------------------------------------------
+# GET ACTIVE GUIDE INFORMATION
+# --------------------------------------------------------------
+
+def get_active_guide():
+
+    if not os.path.exists(
+        GUIDE_METADATA_FILE
+    ):
+
+        return {
+
+            "active": False,
+
+            "filename": None
+
+        }
+
+
+    try:
+
+        with open(
+
+            GUIDE_METADATA_FILE,
+
+            "r",
+
+            encoding="utf-8"
+
+        ) as file:
+
+            return json.load(
+                file
+            )
+
+
+    except Exception:
+
+        return {
+
+            "active": False,
+
+            "filename": None
+
+        }
+
+
+# --------------------------------------------------------------
+# DELETE ACTIVE GUIDE INFORMATION
+# --------------------------------------------------------------
+
+def delete_active_guide_metadata():
+
+    if os.path.exists(
+        GUIDE_METADATA_FILE
+    ):
+
+        os.remove(
+            GUIDE_METADATA_FILE
+        )
 
 
 
@@ -47,6 +187,314 @@ def handle_join_user(data):
     room = f"{user_id}room"
     join_room(room)
     emit("join_user_success", {"user_id": user_id,"room_id": room}, room=request.sid)
+
+
+# ============================================================
+# STOP GENERATION
+# ============================================================
+
+@socketio.on("stop_generation")
+def handle_stop_generation(data):
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+
+        emit(
+            "generation_stop_result",
+            {
+                "success": False,
+                "message": "User session not found."
+            },
+            room=request.sid
+        )
+
+        return
+
+
+    stopped = stop_generation(
+        user_id
+    )
+
+
+    emit(
+
+        "generation_stop_result",
+
+        {
+
+            "success": stopped,
+
+            "message":
+
+                "Stopping generation..."
+
+                if stopped
+
+                else
+
+                "No active generation found."
+
+        },
+
+        room=request.sid
+
+    )
+
+
+# ============================================================
+# BACKGROUND AI GENERATION
+# ============================================================
+
+def generate_bot_response(
+    user_input,
+    user_id,
+    room
+):
+
+    full_answer = ""
+
+
+    try:
+
+        # ----------------------------------------------------
+        # INFORM FRONTEND
+        # ----------------------------------------------------
+
+        socketio.emit(
+
+            "generation_started",
+
+            {},
+
+            room=room
+
+        )
+
+
+        # ----------------------------------------------------
+        # CHECK HUMAN AGENT STATUS
+        # ----------------------------------------------------
+
+        conn = get_db_connection()
+
+        cursor = conn.cursor()
+
+
+        cursor.execute(
+
+            "SELECT agent_connect, agent_asigned "
+            "FROM chat WHERE room_id=%s",
+
+            (room,)
+
+        )
+
+
+        chat_data = cursor.fetchone()
+
+
+        cursor.close()
+
+        conn.close()
+
+
+        # ----------------------------------------------------
+        # HUMAN AGENT CONNECTED
+        # ----------------------------------------------------
+
+        if chat_data and chat_data[0] == 1:
+
+            socketio.emit(
+
+                "generation_finished",
+
+                {
+
+                    "status": "human_mode"
+
+                },
+
+                room=room
+
+            )
+
+            return
+
+
+        # ----------------------------------------------------
+        # STREAM CALLBACK
+        # ----------------------------------------------------
+
+        def stream_callback(full_text):
+
+            socketio.emit(
+
+                "bot_stream",
+
+                {
+
+                    "text": full_text
+
+                },
+
+                room=room
+
+            )
+
+
+        # ----------------------------------------------------
+        # GENERATE RESPONSE
+        # ----------------------------------------------------
+
+        result = generate_response_stream(
+
+            user_input,
+
+            user_id,
+
+            stream_callback
+
+        )
+
+
+        full_answer = result.get(
+
+            "answer",
+
+            ""
+
+        )
+
+
+        # ----------------------------------------------------
+        # USER STOPPED GENERATION
+        # ----------------------------------------------------
+
+        if result.get("stopped"):
+
+            socketio.emit(
+
+                "generation_cancelled",
+
+                {
+
+                    "message":
+
+                        "Generation stopped by user."
+
+                },
+
+                room=room
+
+            )
+
+            return
+
+
+        # ----------------------------------------------------
+        # SAVE COMPLETE BOT RESPONSE
+        # ----------------------------------------------------
+
+        if full_answer.strip():
+
+            conn = get_db_connection()
+
+            cursor = conn.cursor()
+
+
+            cursor.execute(
+
+                """
+                INSERT INTO chatbot_chats
+                (role,message,user_id,room_id,agent_asigned)
+
+                VALUES(%s,%s,%s,%s,%s)
+                """,
+
+                (
+
+                    "bot",
+
+                    full_answer,
+
+                    user_id,
+
+                    room,
+
+                    "bot"
+
+                )
+
+            )
+
+
+            conn.commit()
+
+
+            cursor.close()
+
+            conn.close()
+
+
+        # ----------------------------------------------------
+        # GENERATION COMPLETE
+        # ----------------------------------------------------
+
+        socketio.emit(
+
+            "generation_complete",
+
+            {
+
+                "answer": full_answer
+
+            },
+
+            room=room
+
+        )
+
+
+    except Exception as error:
+
+        print(
+
+            "AI generation error:",
+
+            error
+
+        )
+
+
+        socketio.emit(
+
+            "generation_error",
+
+            {
+
+                "message":
+
+                    "An error occurred while generating the response."
+
+            },
+
+            room=room
+
+        )
+
+
+    finally:
+
+        socketio.emit(
+
+            "generation_finished",
+
+            {},
+
+            room=room
+
+        )
 
 @socketio.on("join_room") 
 def handle_join(data):
@@ -100,59 +548,181 @@ def chat_data(data):
 
 
 
-@app.route("/", methods=["GET","POST"])
+@app.route("/", methods=["GET", "POST"])
 def chatbot():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+
+    # =====================================================
+    # USER SUBMITS THE COMPLETE FORM
+    # =====================================================
 
     if request.method == "POST":
-        if "name" in request.form:
-            name = request.form["name"]
-            user_id = uuid.uuid4().hex[:8]
-            room_id = user_id + "room"
-            session['user_id'] = user_id
-            session['room_id'] = room_id
-            session['name'] = name
-            cursor.execute("INSERT INTO chat (name,user_id,room_id) VALUES (%s,%s,%s)", (name,user_id,room_id))
-            conn.commit()
-            step = 2
 
-        elif "country" in request.form:
-            country = request.form["country"]
-            session['country'] = country
-            cursor.execute("UPDATE chat SET country = %s WHERE id = (SELECT id FROM (SELECT MAX(id) AS id FROM chat) AS t);", (country,))
-            conn.commit()
-            step = 3
+        # -------------------------------------------------
+        # GET ALL FORM DATA
+        # -------------------------------------------------
 
-        elif "mobile" in request.form:
-            mobile = request.form["mobile"]
-            session['mobile'] = mobile
-            cursor.execute("UPDATE chat SET mobile = %s WHERE id = (SELECT id FROM (SELECT MAX(id) AS id FROM chat) AS t);", (mobile,))
-            conn.commit()
-            step = 4
+        name = request.form.get(
+            "name",
+            ""
+        ).strip()
 
-        elif "email" in request.form:
-            email = request.form["email"]
-            session['email'] = email
-            cursor.execute("UPDATE chat SET email = %s WHERE id = (SELECT id FROM (SELECT MAX(id) AS id FROM chat) AS t);", (email,))
-            conn.commit()
-            step = 5
 
-        elif "service" in request.form:
-            service = request.form["service"]
-            session['service'] = service
-            cursor.execute("UPDATE chat SET service = %s WHERE id = (SELECT id FROM (SELECT MAX(id) AS id FROM chat) AS t);", (service,))
-            conn.commit()
-            step = 6
+        country = request.form.get(
+            "country",
+            ""
+        ).strip()
 
-        else:
-            step = 1
-    else:
-        step = 1
 
-    cursor.close()
-    conn.close()
-    return render_template("index.html", step=step)
+        mobile = request.form.get(
+            "mobile",
+            ""
+        ).strip()
+
+
+        email = request.form.get(
+            "email",
+            ""
+        ).strip()
+
+
+        service = request.form.get(
+            "service",
+            ""
+        ).strip()
+
+
+        # -------------------------------------------------
+        # VALIDATION
+        # -------------------------------------------------
+
+        if not all(
+            [
+                name,
+                country,
+                mobile,
+                email,
+                service
+            ]
+        ):
+
+            return render_template(
+                "index.html"
+            )
+
+
+        # =================================================
+        # CREATE USER ID
+        # =================================================
+
+        user_id = uuid.uuid4().hex[:8]
+
+
+        # =================================================
+        # CREATE ROOM ID
+        # =================================================
+
+        room_id = user_id + "room"
+
+
+        # =================================================
+        # CREATE SESSION
+        # =================================================
+
+        session["user_id"] = user_id
+
+        session["room_id"] = room_id
+
+        session["name"] = name
+
+        session["country"] = country
+
+        session["mobile"] = mobile
+
+        session["email"] = email
+
+        session["service"] = service
+
+
+        # =================================================
+        # SAVE USER INFORMATION IN DATABASE
+        # =================================================
+
+        conn = get_db_connection()
+
+        cursor = conn.cursor()
+
+
+        cursor.execute(
+
+            """
+            INSERT INTO chat
+            (
+                name,
+                user_id,
+                room_id,
+                country,
+                mobile,
+                email,
+                service
+            )
+
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
+            """,
+
+            (
+
+                name,
+
+                user_id,
+
+                room_id,
+
+                country,
+
+                mobile,
+
+                email,
+
+                service
+
+            )
+
+        )
+
+
+        conn.commit()
+
+
+        cursor.close()
+
+        conn.close()
+
+
+        # =================================================
+        # REDIRECT USER TO CHAT
+        # =================================================
+
+        return redirect(
+            url_for("chats")
+        )
+
+
+    # =====================================================
+    # SHOW THE USER INFORMATION PAGE
+    # =====================================================
+
+    return render_template(
+        "index.html"
+    )
 
 
 
@@ -188,7 +758,552 @@ def bot_handover(data):
 
 
 
+@app.route("/upload_guide", methods=["POST"])
+def upload_guide():
 
+    try:
+
+        # ==========================================
+        # CHECK FILE
+        # ==========================================
+
+        if "guide_file" not in request.files:
+
+            return jsonify({
+
+                "success": False,
+
+                "message": "No file uploaded."
+
+            })
+
+
+        file = request.files["guide_file"]
+
+
+        if file.filename == "":
+
+            return jsonify({
+
+                "success": False,
+
+                "message": "Please select a file."
+
+            })
+
+
+        # ==========================================
+        # ALLOWED FILE TYPES
+        # ==========================================
+
+        allowed_extensions = {
+
+            ".pdf",
+
+            ".docx",
+
+            ".txt"
+
+        }
+
+
+        filename = secure_filename(
+            file.filename
+        )
+
+
+        extension = os.path.splitext(
+            filename
+        )[1].lower()
+
+
+        if extension not in allowed_extensions:
+
+            return jsonify({
+
+                "success": False,
+
+                "message":
+                    "Only PDF, DOCX and TXT files are allowed."
+
+            })
+
+
+        # ==========================================
+        # CREATE UPLOAD DIRECTORY
+        # ==========================================
+
+        upload_folder = os.path.join(
+
+            app.root_path,
+
+            "uploads"
+
+        )
+
+
+        os.makedirs(
+
+            upload_folder,
+
+            exist_ok=True
+
+        )
+
+
+        # ==========================================
+        # SAVE FILE
+        # ==========================================
+
+        filepath = os.path.join(
+
+            upload_folder,
+
+            filename
+
+        )
+
+
+        file.save(
+            filepath
+        )
+
+
+        # ==========================================
+        # GET APPEND OPTION
+        # ==========================================
+
+        append = (
+
+            request.form.get(
+                "append",
+                "false"
+            ).lower()
+
+            == "true"
+
+        )
+
+
+        print(
+            f"[UPLOAD] Append mode: {append}"
+        )
+
+
+        # ==========================================
+        # EXTRACT TEXT
+        # ==========================================
+
+        user_guide_text = extract_text_from_file(
+            filepath
+        )
+
+
+        if not user_guide_text.strip():
+
+            return jsonify({
+
+                "success": False,
+
+                "message":
+                    "Could not extract readable text from the file."
+
+            })
+
+
+        # ==========================================
+        # PROCESS GUIDE INTO FAISS
+        # ==========================================
+
+        result = process_user_guide(
+
+            user_guide_text,
+
+            append=append
+
+        )
+
+
+        # ==========================================
+        # STOP IF PROCESSING FAILED
+        # ==========================================
+
+        if not result.get("success"):
+
+            return jsonify(
+                result
+            )
+
+
+        # ==========================================
+        # CREATE NEW GUIDE INFORMATION
+        # ==========================================
+
+        new_guide = {
+
+            "filename": filename,
+
+            "filepath": filepath,
+
+            "uploaded_at": time.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+
+        }
+
+
+        # ==========================================
+        # APPEND MODE
+        # ==========================================
+
+        if append:
+
+
+            guide_data = {
+
+                "guides": []
+
+            }
+
+
+            # Load existing JSON data
+
+            if os.path.exists(
+                ACTIVE_GUIDE_FILE
+            ):
+
+
+                try:
+
+
+                    with open(
+
+                        ACTIVE_GUIDE_FILE,
+
+                        "r",
+
+                        encoding="utf-8"
+
+                    ) as file_handle:
+
+
+                        guide_data = json.load(
+                            file_handle
+                        )
+
+
+                except Exception as error:
+
+
+                    print(
+
+                        "[UPLOAD] Error reading guide JSON:",
+
+                        error
+
+                    )
+
+
+                    guide_data = {
+
+                        "guides": []
+
+                    }
+
+
+            # Ensure correct structure
+
+            if "guides" not in guide_data:
+
+
+                guide_data = {
+
+                    "guides": []
+
+                }
+
+
+            # Add new guide
+
+            guide_data["guides"].append(
+
+                new_guide
+
+            )
+
+
+        # ==========================================
+        # REPLACE MODE
+        # ==========================================
+
+        else:
+
+
+            guide_data = {
+
+                "guides": [
+
+                    new_guide
+
+                ]
+
+            }
+
+
+        # ==========================================
+        # SAVE ACTIVE GUIDE INFORMATION
+        # ==========================================
+
+        with open(
+
+            ACTIVE_GUIDE_FILE,
+
+            "w",
+
+            encoding="utf-8"
+
+        ) as file_handle:
+
+
+            json.dump(
+
+                guide_data,
+
+                file_handle,
+
+                indent=4
+
+            )
+
+
+        print(
+            "[UPLOAD] Guide information saved successfully."
+        )
+
+
+        # ==========================================
+        # RETURN SUCCESS
+        # ==========================================
+
+        return jsonify(
+
+            result
+
+        )
+
+
+    except Exception as error:
+
+
+        print(
+
+            "UPLOAD GUIDE ERROR:",
+
+            error
+
+        )
+
+
+        return jsonify({
+
+            "success": False,
+
+            "message": str(error)
+
+        })
+
+
+@app.route(
+    "/remove_user_guide",
+    methods=["POST"]
+)
+def remove_company_user_guide():
+
+    try:
+
+        result = remove_user_guide()
+
+
+        return jsonify(
+            result
+        )
+
+
+    except Exception as error:
+
+        print(
+            "REMOVE USER GUIDE ROUTE ERROR:",
+            error
+        )
+
+
+        return jsonify({
+
+            "success": False,
+
+            "message": str(error)
+
+        }), 500
+
+@app.route("/remove_specific_user_guide",methods=["POST"])
+def remove_specific_guide_route():
+
+    try:
+
+        data = request.get_json()
+
+
+        if not data:
+
+            return jsonify({
+
+                "success": False,
+
+                "message": "No data received."
+
+            })
+
+
+        filename = data.get(
+            "filename"
+        )
+
+
+        if not filename:
+
+            return jsonify({
+
+                "success": False,
+
+                "message": "Filename is required."
+
+            })
+
+
+        result = remove_specific_user_guide(
+
+            filename
+
+        )
+
+
+        return jsonify(
+            result
+        )
+
+
+    except Exception as error:
+
+
+        print(
+
+            "REMOVE SPECIFIC GUIDE ROUTE ERROR:",
+
+            error
+
+        )
+
+
+        return jsonify({
+
+            "success": False,
+
+            "message": str(error)
+
+        }), 500
+
+@app.route("/guide_status", methods=["GET"])
+def guide_status():
+
+    try:
+
+        if not os.path.exists(ACTIVE_GUIDE_FILE):
+
+            return jsonify({
+
+                "active": False,
+
+                "guides": [],
+
+                "count": 0
+
+            })
+
+
+        with open(
+
+            ACTIVE_GUIDE_FILE,
+
+            "r",
+
+            encoding="utf-8"
+
+        ) as file_handle:
+
+            guide_data = json.load(file_handle)
+
+
+        # ==========================================
+        # NEW MULTIPLE GUIDES FORMAT
+        # ==========================================
+
+        if isinstance(guide_data, dict) and "guides" in guide_data:
+
+            guides = guide_data.get("guides", [])
+
+
+        # ==========================================
+        # OLD SINGLE GUIDE FORMAT
+        # Automatically support old JSON
+        # ==========================================
+
+        elif isinstance(guide_data, dict) and "filename" in guide_data:
+
+            guides = [
+
+                guide_data
+
+            ]
+
+
+        else:
+
+            guides = []
+
+
+        return jsonify({
+
+            "active": len(guides) > 0,
+
+            "guides": guides,
+
+            "count": len(guides)
+
+        })
+
+
+    except Exception as error:
+
+        print(
+
+            "GUIDE STATUS ERROR:",
+
+            error
+
+        )
+
+
+        return jsonify({
+
+            "active": False,
+
+            "guides": [],
+
+            "count": 0,
+
+            "message": str(error)
+
+        }), 500
 @app.route("/Admin_login",methods=["GET"])
 def Admin_login():
     return render_template("Admin_Portal_Analysis.html")
@@ -384,36 +1499,161 @@ def agent_need(data):
 
 
 
-@socketio.on('user_response')
-def user_response(data):
-    user_input = data["message"]
-    user_id = session.get('user_id')
-    room = session.get('room_id')
-    agent = data['agent_id']
-    role = "user"
-    bot_role = "bot"
-    bot_reply = get_chatbot_response(user_input)
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT agent_connect FROM chat WHERE room_id=%s",(room,))
-    Agent_connect = cursor.fetchone()
-    cursor.execute("SELECT agent_asigned from chat WHERE room_id = %s",(room,))
-    agent = cursor.fetchone()
-    cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id,agent_asigned) VALUES(%s,%s,%s,%s,%s)",(role,user_input,user_id,room,agent[0]))
-    conn.commit()
-    if Agent_connect[0] != 1:
-        cursor.execute("INSERT INTO chatbot_chats (role,message,user_id,room_id,agent_asigned) VALUES(%s,%s,%s,%s,%s)",(bot_role,bot_reply["answer"],user_id,room,bot_role))
-        conn.commit()
-    cursor.execute("SELECT message FROM chatbot_chats WHERE role = 'agent' ORDER BY id DESC LIMIT 1")
-    mess2 = cursor.fetchall()
-    cursor.execute("SELECT message FROM chatbot_chats WHERE role = 'bot'AND room_id=%s ORDER BY id DESC LIMIT 1",(room,))
-    user_bot = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    socketio.emit("new_message",{"role":role,"message":user_input},room=room)
-    socketio.emit("bot_message",{"role_auto":"bot","bot_reply":user_bot[0],"handover":bot_reply["handover"],"status":Agent_connect[0] if Agent_connect else 0},room=room)
-    
+# ============================================================
+# USER RESPONSE
+# ============================================================
 
+@socketio.on("user_response")
+def user_response(data):
+
+    user_input = data.get(
+        "message",
+        ""
+    ).strip()
+
+
+    user_id = session.get(
+        "user_id"
+    )
+
+
+    room = session.get(
+        "room_id"
+    )
+
+
+    # --------------------------------------------------------
+    # VALIDATION
+    # --------------------------------------------------------
+
+    if not user_input:
+
+        return
+
+
+    if not user_id or not room:
+
+        emit(
+
+            "generation_error",
+
+            {
+
+                "message":
+                    "User session expired. Please refresh."
+
+            },
+
+            room=request.sid
+
+        )
+
+        return
+
+
+    # --------------------------------------------------------
+    # SAVE USER MESSAGE
+    # --------------------------------------------------------
+
+    conn = get_db_connection()
+
+    cursor = conn.cursor()
+
+
+    cursor.execute(
+
+        "SELECT agent_asigned, agent_connect "
+        "FROM chat WHERE room_id=%s",
+
+        (room,)
+
+    )
+
+
+    chat_info = cursor.fetchone()
+
+
+    agent_name = (
+
+        chat_info[0]
+
+        if chat_info
+
+        else "Agent_None"
+
+    )
+
+
+    cursor.execute(
+
+        """
+        INSERT INTO chatbot_chats
+        (role,message,user_id,room_id,agent_asigned)
+
+        VALUES(%s,%s,%s,%s,%s)
+        """,
+
+        (
+
+            "user",
+
+            user_input,
+
+            user_id,
+
+            room,
+
+            agent_name
+
+        )
+
+    )
+
+
+    conn.commit()
+
+
+    cursor.close()
+
+    conn.close()
+
+
+    # --------------------------------------------------------
+    # DISPLAY USER MESSAGE IMMEDIATELY
+    # --------------------------------------------------------
+
+    socketio.emit(
+
+        "new_message",
+
+        {
+
+            "role": "user",
+
+            "message": user_input
+
+        },
+
+        room=room
+
+    )
+
+
+    # --------------------------------------------------------
+    # START AI IN BACKGROUND
+    # --------------------------------------------------------
+
+    socketio.start_background_task(
+
+        generate_bot_response,
+
+        user_input,
+
+        user_id,
+
+        room
+
+    )
 
 
 @socketio.on('Agents')
@@ -482,7 +1722,9 @@ def user_info(data):
       # broadcast zaruri hai
 
 
-  
+@app.route("/company_knowledgebase",methods=["GET"])
+def company_knowledgebase():
+    return render_template("Company_knowledgebase.html")
 
 @app.route("/login_page",methods=["GET"])
 def login_page():
@@ -493,4 +1735,4 @@ def signup_page():
     return render_template("signup.html")
 
 if __name__ == "__main__":
-    socketio.run(app,debug=False)
+    socketio.run(app,debug=True,use_reloader=False)
