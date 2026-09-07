@@ -6,3 +6,26 @@ Flask-JWT-Extended
 PyMySQL
 google-generativeai
 email-validator
+sentence-transformers
+torch
+transformers>=4.44.0
+accelerate>=0.33.0
+
+# File text extraction (PDF / DOCX)
+pypdf>=4.2.0
+python-docx>=1.1.0
+
+# LangChain ecosystem
+langchain>=0.3.0
+langchain-core>=1.2.11
+langchain-community>=0.3.0
+langchain-text-splitters>=0.3.0
+langchain-huggingface>=0.1.0
+langsmith>=0.3.45
+pydantic>=2.7.4
+numpy>=1.26.4   # works with Python 3.10–3.12
+sqlalchemy>=1.4.0
+pyyaml>=5.3.0
+
+# Vector database
+faiss-cpu>=1.8.0
