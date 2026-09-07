@@ -1,280 +1,907 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Agent Portal</title>
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}?v=1">
-  <link rel="icon" type="image/png" sizes="96x96" href="{{ url_for('static', filename='favicon-96x96.png') }}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
-  <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
 
-  <style>
-    body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(135deg, #f4f6f9, #e9ecf2);
-    margin: 0;
-    padding: 0;
-    display: flex;
-}
+    <meta charset="UTF-8">
 
-/* ================= SIDEBAR ================= */
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-.sidebar {
-    width: 220px;
-    height: 100vh;
-    background: linear-gradient(135deg, #096f52, #34495e);
-    padding: 20px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    overflow-y: auto;
-    box-sizing: border-box;
-}
+    <title>Admin Portal - Users</title>
 
-.sidebar h2 {
-    text-align: center;
-    margin-bottom: 30px;
-    color: white;
-}
+    <link
+        rel="icon"
+        type="image/x-icon"
+        href="{{ url_for('static', filename='favicon.ico') }}"
+    >
 
-.sidebar a {
-    display: block;
-    color: white;
-    padding: 12px;
-    margin: 10px 0;
-    text-decoration: none;
-    border-radius: 6px;
-    transition: 0.3s;
-}
+    <style>
 
-.sidebar a:hover {
-    background: #19ad08;
-}
-
-/* ================= MAIN CONTENT ================= */
-
-.main-content {
-    margin-left: 220px;
-    width: calc(100% - 220px);
-}
-
-/* ================= HEADER ================= */
-
-.header {
-    background: linear-gradient(90deg, #096f52, #34495e);
-    color: white;
-    text-align: center;
-    padding: 25px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-.header h1 {
-    margin: 0;
-    font-size: 2.5em;
-    letter-spacing: 2px;
-    font-weight: 600;
-}
-
-/* ================= CONTENT BOXES ================= */
-
-.container {
-    max-width: 900px;
-    margin: 40px auto;
-    background: white;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-    text-align: center;
-}
-
-.container p {
-    font-size: 1.2em;
-    color: #555;
-}
-
-.users {
-    font-size: 1.05em;
-    color: #2c3e50;
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 25px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    text-align: left;
-    border-left: 6px solid #096d6d;
-}
-
-.users:hover {
-    background: #f9f9f9;
-    transform: translateY(-3px);
-}
-
-.users button {
-    margin-top: 15px;
-    padding: 10px 20px;
-    background: #096d6d;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.users button:hover {
-    transform: scale(1.05);
-}
-
-.all_agents {
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 25px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: center;
-}
-
-.all_agents button {
-    padding: 12px 22px;
-    background: linear-gradient(90deg, #096f52, #34495e);
-    color: white;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-}
-
-.all_agents button:hover {
-    transform: scale(1.05);
-}
-
-/* ================= BACK BUTTON ================= */
+        * {
+            box-sizing: border-box;
+        }
 
 
-  </style>
+        body {
+
+            font-family:
+                'Segoe UI',
+                Arial,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #f4f6f9,
+                    #e9ecf2
+                );
+
+            margin: 0;
+
+            min-height: 100vh;
+
+        }
+
+
+        /* =========================================
+           SIDEBAR
+        ========================================= */
+
+        .sidebar {
+
+            width: 220px;
+
+            height: 100vh;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #096f52,
+                    #34495e
+                );
+
+            padding: 20px;
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            overflow-y: auto;
+
+            z-index: 1000;
+
+        }
+
+
+        .sidebar h2 {
+
+            text-align: center;
+
+            margin-bottom: 30px;
+
+            color: white;
+
+        }
+
+
+        .sidebar a {
+
+            display: block;
+
+            color: white;
+
+            padding: 12px;
+
+            margin: 10px 0;
+
+            text-decoration: none;
+
+            border-radius: 6px;
+
+            transition: 0.3s;
+
+        }
+
+
+        .sidebar a:hover {
+
+            background: #19ad08;
+
+        }
+
+
+        .sidebar .active {
+
+            background: rgba(255,255,255,0.15);
+
+        }
+
+
+        /* =========================================
+           MAIN CONTENT
+        ========================================= */
+
+        .main-content {
+
+            margin-left: 220px;
+
+            width: calc(100% - 220px);
+
+            min-height: 100vh;
+
+            padding-bottom: 40px;
+
+        }
+
+
+        /* =========================================
+           HEADER
+        ========================================= */
+
+        .header {
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #096f52,
+                    #34495e
+                );
+
+            color: white;
+
+            text-align: center;
+
+            padding: 25px;
+
+            box-shadow:
+                0 4px 12px
+                rgba(0,0,0,0.2);
+
+        }
+
+
+        .header h1 {
+
+            margin: 0;
+
+            font-size: 2.2em;
+
+        }
+
+
+        /* =========================================
+           USERS
+        ========================================= */
+
+        #users {
+
+            max-width: 900px;
+
+            margin: 35px auto;
+
+            padding: 0 15px;
+
+        }
+
+
+        .users {
+
+            color: #2c3e50;
+
+            margin: 20px 0;
+
+            padding: 25px;
+
+            background: white;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 4px 12px
+                rgba(0,0,0,0.1);
+
+            text-align: left;
+
+            border-left:
+                6px solid #096d6d;
+
+        }
+
+
+        .users button {
+
+            margin-top: 15px;
+
+            margin-right: 10px;
+
+            padding: 10px 20px;
+
+            background: #096d6d;
+
+            color: white;
+
+            border: none;
+
+            border-radius: 25px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+
+        }
+
+
+        .users button:hover {
+
+            opacity: 0.9;
+
+        }
+
+
+        /* =========================================
+           AGENTS
+        ========================================= */
+
+        .all_agents {
+
+            max-width: 100%;
+
+            padding: 20px;
+
+            background: #f7f9fa;
+
+            border-radius: 12px;
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 12px;
+
+            justify-content: flex-start;
+
+        }
+
+
+        .all_agents button {
+
+            padding: 12px 18px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #096f52,
+                    #34495e
+                );
+
+            color: white;
+
+            border: none;
+
+            border-radius: 25px;
+
+            cursor: pointer;
+
+        }
+
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 768px) {
+
+            .sidebar {
+
+                width: 100%;
+
+                height: auto;
+
+                position: relative;
+
+            }
+
+
+            .main-content {
+
+                margin-left: 0;
+
+                width: 100%;
+
+            }
+
+
+            .sidebar h2 {
+
+                text-align: center;
+
+            }
+
+        }
+
+    </style>
+
 </head>
+
+
 <body>
-  <div class="sidebar">
-    <h2>Admin Portal</h2>
-    <a href="{{url_for('Admin_analysis')}}"><i class="fas fa-home"></i> Dashboard</a>
-    <a href="{{url_for('Admin_pannel')}}"><i class="fas fa-users"></i> Users/Agents</a>
-    <a href="#"><i class="fas fa-chart-line"></i> Analytics</a>
-    <a href="#"><i class="fas fa-cog"></i> Settings</a>
-  </div>
-  <div class="main-content">
-  <div class="header">
-    <h1>Admin Portal</h1>
-  </div>
-  <div class="container">
-    <p>Welcome to the Admin Portal. Use this page to manage agents.</p>
-  </div>
-  <div class="users" id="users"></div>
-  <div class="all_agents" id="all_agents"></div>
-</div>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script>
-    var socket = io();
-    socket.emit("Admin_USERS_access", {});
 
-    // Fetch all users
-    socket.on("admin_all_users_access", function(data) {
-        var container = document.getElementById("users");
-        container.innerHTML = "";
+    <!-- =========================================
+         SIDEBAR
+    ========================================= -->
 
-        data.forEach(function(user) {
-            // Create user card
-            var div = document.createElement("div");
-            div.className = "users";
-            div.innerHTML =
-                "user id: " + user.user_id +
-                " | user name: " + user.name +
-                " | email: " + user.email +
-                " | service: " + user.service +
-                " | room id: " + user.room_id +
-                " | Last Assist: " + user.last_assist +
-                " | agent assigned: " + user.agent_asigned;
+    <div class="sidebar">
 
-            // ---------------- VIEW CHATS BUTTON ----------------
-            var btn_chats = document.createElement("button");
-            btn_chats.innerText = "View Chats";
+        <h2>Admin Portal</h2>
 
-            btn_chats.addEventListener("click", function() {
-                socket.emit("admin_join", {user_id: user.user_id});
-            });
 
-            // Redirect after joining
-            socket.once("admin_join_success", function(data) {
-                window.location.href = data.url;
-            });
+        <a href="{{ url_for('Admin_analysis') }}">
+            Dashboard
+        </a>
 
-            // ---------------- AGENT BOX ----------------
-            var agentsBox = document.createElement("div");
-            agentsBox.className = "all_agents";
-            agentsBox.style.display = "none";
 
-            // ---------------- HANDOVER BUTTON ----------------
-            var btn_handover = document.createElement("button");
-            btn_handover.innerText = "Handover Chat";
+        <a
+            href="{{ url_for('Admin_pannel') }}"
+            class="active"
+        >
+            Users / Agents
+        </a>
 
-            btn_handover.addEventListener("click", function(e) {
-                e.preventDefault();
 
-                // Toggle close
-                if (agentsBox.style.display === "flex") {
-                    agentsBox.style.display = "none";
+        <!-- CHANGE ROUTE NAME IF NECESSARY -->
+
+        <a href="{{ url_for('company_knowledgebase') }}">
+            Company Knowledge Base
+        </a>
+
+
+        <a href="#">
+            Settings
+        </a>
+
+    </div>
+
+
+
+    <!-- =========================================
+         MAIN CONTENT
+    ========================================= -->
+
+    <div class="main-content">
+
+
+        <div class="header">
+
+            <h1>
+                Users & Chat Management
+            </h1>
+
+        </div>
+
+
+
+        <!-- USERS -->
+
+        <div id="users">
+
+            Loading users...
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- SOCKET.IO -->
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+
+    <script>
+
+
+        /* =========================================
+           SOCKET
+        ========================================= */
+
+        const socket = io();
+
+
+
+        /* =========================================
+           ADMIN USER ACCESS
+        ========================================= */
+
+        socket.emit(
+
+            "Admin_USERS_access",
+
+            {}
+
+        );
+
+
+
+        /* =========================================
+           FETCH ALL USERS
+        ========================================= */
+
+        socket.on(
+
+            "admin_all_users_access",
+
+            function(data) {
+
+
+                const container =
+
+                    document.getElementById(
+                        "users"
+                    );
+
+
+                container.innerHTML = "";
+
+
+                /* NO USERS */
+
+                if (!data || data.length === 0) {
+
+
+                    container.innerHTML =
+
+                        "<div class='users'>" +
+
+                        "No users found."
+
+                        +
+
+                        "</div>";
+
+
                     return;
+
                 }
 
-                // Open box
-                agentsBox.style.display = "flex";
-                agentsBox.innerHTML = "";
 
-                // Ask server for agents
-                socket.emit("Agents", {});
 
-                // Receive agent list once
-                socket.once("all_agents", function(agentList) {
-                    var bot = "bot"; 
-                    var handover_bot = document.createElement("button");
-                    handover_bot.innerText = "Handover To " + bot;
-                    handover_bot.addEventListener("click", function() {
-                        socket.emit("remove_agent",{room_id: user.room_id});
-                        alert("Chat handed over to " + bot);
-                        agentsBox.style.display = "none";
-                        socket.emit("USERS",{});
-                        window.location.href="/Admin_pannel";
-                    });
-                    agentList.forEach(function(agent) {
-                        var agentBtn = document.createElement("button");
-                        agentBtn.innerText = "Handover To " + agent;
-                        
-                        agentBtn.addEventListener("click", function() {
-                            socket.emit("handover", {handover_agent: agent,room_id: user.room_id});
-                            alert("Chat handed over to " + agent);
-                            agentsBox.style.display = "none";
-                            socket.emit("USERS",{});
-                            window.location.href="/Admin_pannel";
-                        });
-                        agentsBox.appendChild(agentBtn);
-                        agentsBox.appendChild(handover_bot);
-                    });
-                });
-            });
-            // Add elements to user card
-            div.appendChild(document.createElement("br"));
-            div.appendChild(btn_chats);
-            div.appendChild(btn_handover);
-            div.appendChild(document.createElement("br"));
-            div.appendChild(agentsBox);
+                /* =====================================
+                   DISPLAY USERS
+                ===================================== */
 
-            // Add card to page
-            container.appendChild(div);
-        });
-    });
-</script>
+                data.forEach(
+
+                    function(user) {
+
+
+                        const div =
+
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        div.className = "users";
+
+
+                        div.innerHTML =
+
+                            "<strong>User ID:</strong> " +
+
+                            (user.user_id || "-")
+
+                            +
+
+                            "<br><br>"
+
+                            +
+
+                            "<strong>User Name:</strong> " +
+
+                            (user.name || "-")
+
+                            +
+
+                            "<br><br>"
+
+                            +
+
+                            "<strong>Email:</strong> " +
+
+                            (user.email || "-")
+
+                            +
+
+                            "<br><br>"
+
+                            +
+
+                            "<strong>Service:</strong> " +
+
+                            (user.service || "-")
+
+                            +
+
+                            "<br><br>"
+
+                            +
+
+                            "<strong>Room ID:</strong> " +
+
+                            (user.room_id || "-")
+
+                            +
+
+                            "<br><br>"
+
+                            +
+
+                            "<strong>Last Assist:</strong> " +
+
+                            (user.last_assist || "-")
+
+                            +
+
+                            "<br><br>"
+
+                            +
+
+                            "<strong>Agent Assigned:</strong> " +
+
+                            (user.agent_asigned || "bot");
+
+
+
+                        /* =====================================
+                           VIEW CHATS BUTTON
+                        ===================================== */
+
+                        const btnChats =
+
+                            document.createElement(
+                                "button"
+                            );
+
+
+                        btnChats.innerText =
+
+                            "View Chats";
+
+
+                        btnChats.addEventListener(
+
+                            "click",
+
+                            function() {
+
+
+                                socket.emit(
+
+                                    "admin_join",
+
+                                    {
+
+                                        user_id:
+                                            user.user_id
+
+                                    }
+
+                                );
+
+
+                            }
+
+                        );
+
+
+
+                        /* =====================================
+                           HANDOVER BUTTON
+                        ===================================== */
+
+                        const btnHandover =
+
+                            document.createElement(
+                                "button"
+                            );
+
+
+                        btnHandover.innerText =
+
+                            "Handover Chat";
+
+
+                        const agentsBox =
+
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        agentsBox.className =
+                            "all_agents";
+
+
+                        agentsBox.style.display =
+                            "none";
+
+
+                        agentsBox.style.marginTop =
+                            "20px";
+
+
+
+                        btnHandover.addEventListener(
+
+                            "click",
+
+                            function(event) {
+
+
+                                event.preventDefault();
+
+
+                                /* TOGGLE AGENT BOX */
+
+                                if (
+
+                                    agentsBox.style.display ===
+                                    "flex"
+
+                                ) {
+
+
+                                    agentsBox.style.display =
+                                        "none";
+
+
+                                    return;
+
+                                }
+
+
+                                agentsBox.style.display =
+                                    "flex";
+
+
+                                agentsBox.innerHTML = "";
+
+
+                                /* GET AGENTS */
+
+                                socket.emit(
+
+                                    "Agents",
+
+                                    {}
+
+                                );
+
+
+                                socket.once(
+
+                                    "all_agents",
+
+                                    function(agentList) {
+
+
+                                        /* =====================
+                                           HANDOVER TO BOT
+                                        ===================== */
+
+                                        const botButton =
+
+                                            document.createElement(
+                                                "button"
+                                            );
+
+
+                                        botButton.innerText =
+                                            "Handover To Bot";
+
+
+                                        botButton.addEventListener(
+
+                                            "click",
+
+                                            function() {
+
+
+                                                socket.emit(
+
+                                                    "remove_agent",
+
+                                                    {
+
+                                                        room_id:
+                                                            user.room_id
+
+                                                    }
+
+                                                );
+
+
+                                                agentsBox.style.display =
+                                                    "none";
+
+
+                                                window.location.href =
+                                                    "/Admin_pannel";
+
+
+                                            }
+
+                                        );
+
+
+                                        agentsBox.appendChild(
+                                            botButton
+                                        );
+
+
+
+                                        /* =====================
+                                           DISPLAY AGENTS
+                                        ===================== */
+
+                                        if (
+
+                                            Array.isArray(
+                                                agentList
+                                            )
+
+                                        ) {
+
+
+                                            agentList.forEach(
+
+                                                function(agent) {
+
+
+                                                    const agentBtn =
+
+                                                        document.createElement(
+                                                            "button"
+                                                        );
+
+
+                                                    agentBtn.innerText =
+
+                                                        "Handover To " +
+
+                                                        agent;
+
+
+
+                                                    agentBtn.addEventListener(
+
+                                                        "click",
+
+                                                        function() {
+
+
+                                                            socket.emit(
+
+                                                                "handover",
+
+                                                                {
+
+                                                                    handover_agent:
+                                                                        agent,
+
+                                                                    room_id:
+                                                                        user.room_id
+
+                                                                }
+
+                                                            );
+
+
+                                                            agentsBox.style.display =
+                                                                "none";
+
+
+                                                            window.location.href =
+                                                                "/Admin_pannel";
+
+
+                                                        }
+
+                                                    );
+
+
+                                                    agentsBox.appendChild(
+                                                        agentBtn
+                                                    );
+
+
+                                                }
+
+                                            );
+
+
+                                        }
+
+
+                                    }
+
+                                );
+
+
+                            }
+
+                        );
+
+
+
+                        /* ADD BUTTONS */
+
+                        div.appendChild(
+                            document.createElement("br")
+                        );
+
+
+                        div.appendChild(
+                            btnChats
+                        );
+
+
+                        div.appendChild(
+                            btnHandover
+                        );
+
+
+                        div.appendChild(
+                            agentsBox
+                        );
+
+
+                        container.appendChild(
+                            div
+                        );
+
+
+                    }
+
+                );
+
+
+            }
+
+        );
+
+
+
+        /* =========================================
+           ADMIN JOIN SUCCESS
+        ========================================= */
+
+        socket.on(
+
+            "admin_join_success",
+
+            function(data) {
+
+
+                window.location.href =
+                    data.url;
+
+
+            }
+
+        );
+
+
+    </script>
+
+
 </body>
+
 </html>
