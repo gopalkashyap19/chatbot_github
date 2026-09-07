@@ -1,384 +1,676 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Chatbot</title>
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}?v=1">
-  <link rel="icon" type="image/png" sizes="96x96" href="{{ url_for('static', filename='favicon-96x96.png') }}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
-  <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <style>
-body { 
-  font-family: 'Segoe UI', Arial, sans-serif; 
-  background: linear-gradient(135deg, #f4f6f9, #e9ecf2);
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
-p {
-  font-size: 25px;
-  text-align: center;
-  margin: 0 0 10px 0;
-}
+    <meta charset="UTF-8">
 
-button, input {
-  font-size: 1rem;
-  padding: 12px;
-}
+    <title>User Information</title>
 
-/* Agent login button - fixed positioning for top */
-.agent {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: auto;
-  min-width: 150px;
-  padding: 10px 30px;
-  background: #3498db;
-  color: white;
-  border: none;
-  border-radius: 30px;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-  transition: all 0.3s ease;
-  text-decoration: none;
-}
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
 
-.agent:hover {
-  background: #2980b9;
-  transform: translateX(-50%) scale(1.05);
-  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-}
+    <link
+        rel="icon"
+        type="image/x-icon"
+        href="{{ url_for('static', filename='favicon.ico') }}"
+    >
 
-.chatbox {
-  width: 90%;
-  max-width: 500px;
-  background: #fff;
-  border: 2px solid #3498db;
-  border-radius: 20px;
-  padding: 40px 35px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-  transition: transform 0.2s ease-in-out;
-  margin: 0 auto;
-}
 
-.chatbox:hover {
-  transform: translateY(-4px);
-}
+    <style>
 
-.header {
-  background: linear-gradient(90deg, #3498db, #2980b9);
-  color: #fff;
-  padding: 18px 30px;
-  text-align: center;
-  font-weight: bold;
-  border-radius: 12px;
-  margin-bottom: 25px;
-  font-size: 28px;
-  letter-spacing: 0.5px;
-}
+        * {
 
-/* Message style - like in your image */
-.message {
-  background: #f0f4f8;
-  padding: 12px 18px;
-  border-radius: 15px;
-  margin-bottom: 20px;
-  font-size: 18px;
-  color: #2c3e50;
-  text-align: center;
-}
+            box-sizing: border-box;
 
-.message span {
-  background: #e8edf3;
-  padding: 2px 8px;
-  border-radius: 5px;
-}
+            margin: 0;
 
-input, select {
-  width: 100%;
-  padding: 14px 20px;
-  margin-top: 15px;
-  border-radius: 30px;
-  border: 2px solid #e0e6ed;
-  font-size: 16px;
-  outline: none;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  box-sizing: border-box;
-  background: #f8fafc;
-}
+            padding: 0;
 
-input:focus, select:focus {
-  border-color: #3498db;
-  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
-}
+        }
 
-input::placeholder {
-  color: #a0b0c0;
-}
 
-button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 20px;
-  border-radius: 30px;
-  border: none;
-  background: linear-gradient(90deg, #3498db, #2980b9);
-  color: #fff;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.25);
-}
+        html,
+        body {
 
-button:hover {
-  background: linear-gradient(90deg, #1f78c1, #145a86);
-  transform: scale(1.02);
-  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.35);
-}
+            width: 100%;
 
-/* Desktop and Tablet styles */
-@media (min-width: 769px) {
-  body {
-    padding: 40px 20px;
-    background: linear-gradient(135deg, #f4f6f9, #e9ecf2);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+            min-height: 100%;
 
-  .agent {
-    top: 30px;
-    padding: 12px 40px;
-    font-size: 20px;
-  }
+        }
 
-  .chatbox {
-    width: 450px;
-    max-width: 90%;
-    padding: 45px 40px;
-    border-radius: 24px;
-    margin-top: 20px;
-  }
 
-  .header {
-    font-size: 32px;
-    padding: 20px 35px;
-    border-radius: 14px;
-  }
+        body {
 
-  .message {
-    font-size: 20px;
-    padding: 15px 22px;
-  }
+            font-family:
 
-  input, select {
-    font-size: 17px;
-    padding: 16px 24px;
-  }
+                "Segoe UI",
+                Arial,
+                sans-serif;
 
-  button {
-    font-size: 19px;
-    padding: 16px;
-  }
-}
 
-/* Tablet specific adjustments */
-@media (min-width: 481px) and (max-width: 768px) {
-  body {
-    padding: 30px 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-  }
+            background:
 
-  .agent {
-    top: 25px;
-    padding: 10px 35px;
-    font-size: 18px;
-  }
+                linear-gradient(
+                    135deg,
+                    #089cbe,
+                    #0813ac,
+                    #09cba7
+                );
 
-  .chatbox {
-    width: 85%;
-    max-width: 450px;
-    padding: 35px 30px;
-    margin-top: 15px;
-  }
 
-  .header {
-    font-size: 26px;
-    padding: 16px 25px;
-  }
+            min-height: 100vh;
 
-  .message {
-    font-size: 18px;
-    padding: 12px 18px;
-  }
+            display: flex;
 
-  input, select {
-    font-size: 16px;
-    padding: 14px 20px;
-  }
+            justify-content: center;
 
-  button {
-    font-size: 17px;
-    padding: 14px;
-  }
-}
+            align-items: center;
 
-/* Mobile styles - unchanged from original */
-@media (max-width: 480px) {
-  body {
-    align-items: stretch;
-    background: #fff;
-    padding: 0;
-    display: block;
-  }
+            padding: 20px;
 
-  .agent {
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: auto;
-    min-width: 130px;
-    padding: 8px 20px;
-    font-size: 14px;
-    background: #3498db;
-    color: white;
-    border-radius: 25px;
-    z-index: 10;
-  }
+        }
 
-  .agent:hover {
-    transform: translateX(-50%) scale(1.02);
-  }
 
-  .chatbox {
-    width: 100%;
-    max-width: 100%;
-    min-height: 100vh;
-    margin: 0;
-    padding: 25px 20px;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    box-sizing: border-box;
-  }
+        /* =========================================
+           AGENT LOGIN
+        ========================================= */
 
-  .chatbox:hover {
-    transform: none;
-  }
+        .agent {
 
-  .header {
-    font-size: 20px;
-    padding: 14px 18px;
-    border-radius: 25px;
-    margin-bottom: 20px;
-  }
+            position: fixed;
 
-  .message {
-    font-size: 16px;
-    padding: 10px 14px;
-  }
+            top: 20px;
 
-  input, select {
-    font-size: 15px;
-    padding: 14px 18px;
-    border-radius: 25px;
-    margin-top: 12px;
-  }
+            right: 25px;
 
-  button {
-    margin-top: 18px;
-    padding: 16px;
-    font-size: 16px;
-    border-radius: 25px;
-  }
-}
+            text-decoration: none;
 
-  </style>
+            color: white;
+
+            background:
+
+                linear-gradient(
+                    135deg,
+                    #0813ac,
+                    #089cbe
+                );
+
+
+            padding: 10px 22px;
+
+            border-radius: 25px;
+
+            font-weight: bold;
+
+            font-size: 15px;
+
+            box-shadow:
+
+                0 5px 15px
+                rgba(0,0,0,0.2);
+
+            transition: 0.2s;
+
+        }
+
+
+        .agent:hover {
+
+            transform: scale(1.05);
+
+        }
+
+
+        /* =========================================
+           MAIN CONTAINER
+        ========================================= */
+
+        .container {
+
+            width: 100%;
+
+            max-width: 650px;
+
+            background: white;
+
+            border-radius: 22px;
+
+            overflow: hidden;
+
+            box-shadow:
+
+                0 15px 50px
+                rgba(0,0,0,0.3);
+
+        }
+
+
+        /* =========================================
+           HEADER
+        ========================================= */
+
+        .header {
+
+            background:
+
+                linear-gradient(
+                    135deg,
+                    #089cbe,
+                    #0813ac,
+                    #09cba7
+                );
+
+
+            color: white;
+
+            padding: 25px;
+
+            text-align: center;
+
+        }
+
+
+        .header h1 {
+
+            font-size: 28px;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .header p {
+
+            font-size: 15px;
+
+            opacity: 0.9;
+
+        }
+
+
+        /* =========================================
+           FORM
+        ========================================= */
+
+        .form-container {
+
+            padding: 30px;
+
+        }
+
+
+        .form-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 20px;
+
+        }
+
+
+        .form-group {
+
+            display: flex;
+
+            flex-direction: column;
+
+        }
+
+
+        .form-group.full-width {
+
+            grid-column:
+                span 2;
+
+        }
+
+
+        label {
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            margin-bottom: 8px;
+
+            color: #333;
+
+        }
+
+
+        input,
+        select {
+
+            width: 100%;
+
+            padding: 14px 16px;
+
+            border:
+
+                2px solid #e1e5eb;
+
+            border-radius: 10px;
+
+            font-size: 15px;
+
+            outline: none;
+
+            transition: 0.2s;
+
+            background: #f8fafc;
+
+        }
+
+
+        input:focus,
+        select:focus {
+
+            border-color: #089cbe;
+
+            background: white;
+
+            box-shadow:
+
+                0 0 0 3px
+                rgba(8,156,190,0.12);
+
+        }
+
+
+        /* =========================================
+           GO TO CHAT BUTTON
+        ========================================= */
+
+        .go-chat-btn {
+
+            width: 100%;
+
+            margin-top: 28px;
+
+            padding: 15px;
+
+            border: none;
+
+            border-radius: 12px;
+
+            cursor: pointer;
+
+            color: white;
+
+            font-size: 17px;
+
+            font-weight: bold;
+
+            background:
+
+                linear-gradient(
+                    135deg,
+                    #089cbe,
+                    #0813ac,
+                    #09cba7
+                );
+
+
+            transition: 0.25s;
+
+            box-shadow:
+
+                0 6px 18px
+                rgba(8,100,190,0.3);
+
+        }
+
+
+        .go-chat-btn:hover {
+
+            transform:
+
+                translateY(-2px);
+
+            box-shadow:
+
+                0 10px 25px
+                rgba(8,100,190,0.4);
+
+        }
+
+
+        .go-chat-btn:active {
+
+            transform:
+
+                translateY(0);
+
+        }
+
+
+        /* =========================================
+           MOBILE
+        ========================================= */
+
+        @media
+        (
+            max-width: 600px
+        ) {
+
+            body {
+
+                padding: 15px;
+
+                align-items: center;
+
+            }
+
+
+            .agent {
+
+                top: 10px;
+
+                right: 10px;
+
+                padding: 8px 15px;
+
+                font-size: 13px;
+
+            }
+
+
+            .container {
+
+                margin-top: 45px;
+
+                border-radius: 18px;
+
+            }
+
+
+            .header {
+
+                padding: 22px 15px;
+
+            }
+
+
+            .header h1 {
+
+                font-size: 23px;
+
+            }
+
+
+            .form-container {
+
+                padding: 22px 18px;
+
+            }
+
+
+            .form-grid {
+
+                grid-template-columns:
+                    1fr;
+
+                gap: 16px;
+
+            }
+
+
+            .form-group.full-width {
+
+                grid-column:
+                    span 1;
+
+            }
+
+
+        }
+
+    </style>
+
 </head>
+
+
 <body>
-  <a href="{{url_for('login_page')}}" class="agent">Agent login</a>
-  <div class="chatbox">
-    <div class="header">Messages</div>
-    {% if step == 1 %}
-      <form method="post" action="{{url_for('chatbot')}}">
-        <p>Hello 👋, what's your name?</p>
-        <input type="text" name="name" required>
-        <button type="submit">Next</button>
-      </form>
-    {% elif step == 2 %}
-      <form method="post" action="{{url_for('chatbot')}}">
-        <p>Which country are you from?</p>
-        <select name="country">
-          <option>India (+91)</option>
-          <option>USA (+1)</option>
-          <option>UK (+44)</option>
-        </select>
-        <button type="submit">Next</button>
-      </form>
-    {% elif step == 3 %}
-      <form method="post" action="{{url_for('chatbot')}}">
-        <p>Nice to meet you! Can I have your Mobile?</p>
-        <input type="text" name="mobile" required>
-        <button type="submit">Next</button>
-      </form>
-    {% elif step == 4 %}
-      <form method="post" action="{{url_for('chatbot')}}">
-        <p>Can I have your Email?</p>
-        <input type="email" name="email" required>
-        <button type="submit">Next</button>
-      </form>
-    {% elif step == 5 %}
-      <form method="post" action="{{url_for('chatbot')}}">
-        <p>What is the Query Related To?</p>
-        <button name="service" value="Room Bookings">Room Bookings</button>
-        <button name="service" value="Expenses">Expenses</button>
-        <button name="service" value="Staff Related">Staff Related</button>
-        <button name="service" value="Attendence Related">Attendence Related</button>
-        <button name="service" value="Reports">Reports</button>
-        <button name="service" value="other">other</button>
-      </form>
-    {% elif step == 6 %}
-      <p>You have completed the questions. Now you can continue with the chat.</p>
-      <a href="{{url_for('chats')}}"><button id = "go_to_chat">Go to Chat</button></a>
-    {% endif %}
-  </div>
-  <script src = "https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script>
-      var socket = io();
-      
-      document.getElementById("go_to_chat").addEventListener("click",function(){
-        socket.emit("Admin_analysis",{});
-        socket.emit("Admin_USERS_access", {});
-        var userId = "{{user_id}}";
-        var room_Id = "{{room_id}}";
-        socket.emit("join_user_room",{user_id : userId});
-        socket.on("join_user_success", function(data){
-          socket.emit("chat_data",{});
-        });
-      });
-    
-    </script>
+
+
+<!-- =========================================
+     AGENT LOGIN
+========================================= -->
+
+<a
+    href="{{ url_for('login_page') }}"
+    class="agent"
+>
+
+    Agent Login
+
+</a>
+
+
+
+<!-- =========================================
+     MAIN CONTAINER
+========================================= -->
+
+<div class="container">
+
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <h1>
+            Welcome to Our Chatbot 👋
+        </h1>
+
+        <p>
+            Please provide your details before starting the chat.
+        </p>
+
+    </div>
+
+
+
+    <!-- FORM -->
+
+    <div class="form-container">
+
+
+        <form
+            method="POST"
+            action="{{ url_for('chatbot') }}"
+        >
+
+
+            <div class="form-grid">
+
+
+                <!-- NAME -->
+
+                <div class="form-group">
+
+                    <label>
+                        Your Name
+                    </label>
+
+                    <input
+
+                        type="text"
+
+                        name="name"
+
+                        placeholder="Enter your name"
+
+                        required
+
+                    >
+
+                </div>
+
+
+
+                <!-- COUNTRY -->
+
+                <div class="form-group">
+
+                    <label>
+                        Country
+                    </label>
+
+                    <select
+                        name="country"
+                        required
+                    >
+
+                        <option value="">
+                            Select Country
+                        </option>
+
+                        <option value="India (+91)">
+                            India (+91)
+                        </option>
+
+                        <option value="USA (+1)">
+                            USA (+1)
+                        </option>
+
+                        <option value="UK (+44)">
+                            UK (+44)
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+
+                <!-- MOBILE -->
+
+                <div class="form-group">
+
+                    <label>
+                        Mobile Number
+                    </label>
+
+                    <input
+
+                        type="tel"
+
+                        name="mobile"
+
+                        placeholder="Enter mobile number"
+
+                        required
+
+                    >
+
+                </div>
+
+
+
+                <!-- EMAIL -->
+
+                <div class="form-group">
+
+                    <label>
+                        Email Address
+                    </label>
+
+                    <input
+
+                        type="email"
+
+                        name="email"
+
+                        placeholder="Enter your email"
+
+                        required
+
+                    >
+
+                </div>
+
+
+
+                <!-- SERVICE -->
+
+                <div class="form-group full-width">
+
+                    <label>
+                        What is your query related to?
+                    </label>
+
+
+                    <select
+                        name="service"
+                        required
+                    >
+
+                        <option value="">
+                            Select a service
+                        </option>
+
+                        <option value="Room Bookings">
+                            Room Bookings
+                        </option>
+
+                        <option value="Expenses">
+                            Expenses
+                        </option>
+
+                        <option value="Staff Related">
+                            Staff Related
+                        </option>
+
+                        <option value="Attendence Related">
+                            Attendance Related
+                        </option>
+
+                        <option value="Reports">
+                            Reports
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- GO TO CHAT -->
+
+            <button
+                type="submit"
+                class="go-chat-btn"
+            >
+
+                Go To Chat 💬
+
+            </button>
+
+
+        </form>
+
+
+    </div>
+
+
+</div>
+
+
 </body>
+
 </html>
