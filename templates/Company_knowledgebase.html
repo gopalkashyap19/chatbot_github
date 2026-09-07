@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Company Knowledge Base</title>
+
+
+    <link
+        rel="icon"
+        type="image/x-icon"
+        href="{{ url_for('static', filename='favicon.ico') }}"
+    >
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            font-family:
+                'Segoe UI',
+                Arial,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #f4f6f9,
+                    #e9ecf2
+                );
+
+            margin: 0;
+
+            min-height: 100vh;
+
+        }
+
+
+        /* =========================================
+           SIDEBAR
+        ========================================= */
+
+        .sidebar {
+
+            width: 220px;
+
+            height: 100vh;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #096f52,
+                    #34495e
+                );
+
+            padding: 20px;
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            overflow-y: auto;
+
+        }
+
+
+        .sidebar h2 {
+
+            text-align: center;
+
+            margin-bottom: 30px;
+
+            color: white;
+
+        }
+
+
+        .sidebar a {
+
+            display: block;
+
+            color: white;
+
+            padding: 12px;
+
+            margin: 10px 0;
+
+            text-decoration: none;
+
+            border-radius: 6px;
+
+            transition: 0.3s;
+
+        }
+
+
+        .sidebar a:hover {
+
+            background: #19ad08;
+
+        }
+
+
+        .sidebar .active {
+
+            background:
+                rgba(255,255,255,0.15);
+
+        }
+
+
+        /* =========================================
+           MAIN CONTENT
+        ========================================= */
+
+        .main-content {
+
+            margin-left: 220px;
+
+            width: calc(100% - 220px);
+
+            min-height: 100vh;
+
+            padding-bottom: 40px;
+
+        }
+
+
+        /* =========================================
+           HEADER
+        ========================================= */
+
+        .header {
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #096f52,
+                    #34495e
+                );
+
+            color: white;
+
+            text-align: center;
+
+            padding: 25px;
+
+            box-shadow:
+                0 4px 12px
+                rgba(0,0,0,0.2);
+
+        }
+
+
+        .header h1 {
+
+            margin: 0;
+
+            font-size: 2.2em;
+
+        }
+
+
+        /* =========================================
+           KNOWLEDGE BASE
+        ========================================= */
+
+        .user-guide-section {
+
+            max-width: 900px;
+
+            margin: 40px auto;
+
+            background: white;
+
+            padding: 30px;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 5px 20px
+                rgba(0,0,0,0.08);
+
+        }
+
+
+        .user-guide-section h3 {
+
+            margin-top: 0;
+
+            color: #2c3e50;
+
+            font-size: 24px;
+
+        }
+
+
+        .guide-description {
+
+            color: #666;
+
+            line-height: 1.5;
+
+            margin-bottom: 22px;
+
+        }
+
+
+        /* =========================================
+           ACTIVE GUIDES
+        ========================================= */
+
+        .active-guide-container {
+
+            margin-bottom: 20px;
+
+            padding: 20px;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #e8fff4,
+                    #eefcff
+                );
+
+            border-left:
+                5px solid #999;
+
+        }
+
+
+        .guide-status {
+
+            display: flex;
+
+            align-items: flex-start;
+
+            gap: 12px;
+
+        }
+
+
+        .status-dot {
+
+            width: 12px;
+
+            height: 12px;
+
+            min-width: 12px;
+
+            border-radius: 50%;
+
+            background: #999;
+
+            margin-top: 5px;
+
+        }
+
+
+        .guide-status strong {
+
+            display: block;
+
+            color: #146c52;
+
+            margin-bottom: 5px;
+
+            font-size: 17px;
+
+        }
+
+
+        .guide-status p {
+
+            margin: 0;
+
+            color: #555;
+
+            font-size: 14px;
+
+        }
+
+
+        /* =========================================
+           GUIDE LIST
+        ========================================= */
+
+        .guide-list {
+
+            width: 100%;
+
+            margin-top: 15px;
+
+        }
+
+
+        .guide-item {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            gap: 15px;
+
+            padding: 14px;
+
+            margin-top: 10px;
+
+            background: white;
+
+            border-radius: 8px;
+
+            border: 1px solid #dfe6e9;
+
+            box-shadow:
+                0 2px 6px
+                rgba(0,0,0,0.06);
+
+        }
+
+
+        .guide-item-info {
+
+            flex: 1;
+
+            min-width: 0;
+
+        }
+
+
+        .guide-item-name {
+
+            font-weight: 600;
+
+            color: #2c3e50;
+
+            word-break: break-word;
+
+        }
+
+
+        .guide-item-date {
+
+            margin-top: 5px;
+
+            font-size: 12px;
+
+            color: #777;
+
+        }
+
+
+        /* =========================================
+           REMOVE SINGLE GUIDE
+        ========================================= */
+
+        .guide-remove-single-btn {
+
+            border: none;
+
+            background: #e74c3c;
+
+            color: white;
+
+            padding: 9px 14px;
+
+            border-radius: 6px;
+
+            cursor: pointer;
+
+            font-size: 13px;
+
+            white-space: nowrap;
+
+        }
+
+
+        .guide-remove-single-btn:hover {
+
+            background: #c0392b;
+
+        }
+
+
+        /* =========================================
+           FILE INPUT
+        ========================================= */
+
+        #guideFile {
+
+            width: 100%;
+
+            padding: 12px;
+
+            border:
+                2px dashed #3498db;
+
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            margin-bottom: 15px;
+
+            background: #fafcff;
+
+        }
+
+
+        /* =========================================
+           APPEND OPTION
+        ========================================= */
+
+        .append-option {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            margin-bottom: 18px;
+
+            color: #555;
+
+            cursor: pointer;
+
+        }
+
+
+        .append-help {
+
+            font-size: 13px;
+
+            color: #777;
+
+            margin-top: -10px;
+
+            margin-bottom: 18px;
+
+            margin-left: 25px;
+
+        }
+
+
+        /* =========================================
+           BUTTONS
+        ========================================= */
+
+        .upload-guide-btn {
+
+            width: 100%;
+
+            padding: 13px;
+
+            border: none;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            color: white;
+
+            font-weight: bold;
+
+            font-size: 15px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0984e3,
+                    #6c5ce7
+                );
+
+        }
+
+
+        .remove-guide-btn {
+
+            width: 100%;
+
+            margin-top: 12px;
+
+            padding: 13px;
+
+            border: none;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            color: white;
+
+            font-weight: bold;
+
+            font-size: 15px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #e74c3c,
+                    #b00020
+                );
+
+        }
+
+
+        button:disabled {
+
+            opacity: 0.6;
+
+            cursor: not-allowed;
+
+        }
+
+
+        /* =========================================
+           MESSAGE
+        ========================================= */
+
+        .guide-message {
+
+            margin-top: 16px;
+
+            text-align: center;
+
+            font-size: 14px;
+
+            font-weight: 500;
+
+            min-height: 20px;
+
+        }
+
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 768px) {
+
+            .sidebar {
+
+                width: 100%;
+
+                height: auto;
+
+                position: relative;
+
+            }
+
+
+            .main-content {
+
+                margin-left: 0;
+
+                width: 100%;
+
+            }
+
+
+            .user-guide-section {
+
+                width: 92%;
+
+            }
+
+
+            .guide-item {
+
+                flex-direction: column;
+
+                align-items: stretch;
+
+            }
+
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================
+         SIDEBAR
+    ========================================= -->
+
+    <div class="sidebar">
+
+        <h2>Admin Portal</h2>
+
+
+        <a href="{{ url_for('Admin_analysis') }}">
+            Dashboard
+        </a>
+
+
+        <a href="{{ url_for('Admin_pannel') }}">
+            Users / Agents
+        </a>
+
+
+        <a
+            href="{{ url_for('company_knowledgebase') }}"
+            class="active"
+        >
+            Company Knowledge Base
+        </a>
+
+
+        <a href="#">
+            Settings
+        </a>
+
+    </div>
+
+
+
+    <!-- =========================================
+         MAIN CONTENT
+    ========================================= -->
+
+    <div class="main-content">
+
+
+        <div class="header">
+
+            <h1>
+                Company Knowledge Base
+            </h1>
+
+        </div>
+
+
+
+        <!-- =========================================
+             USER GUIDE SECTION
+        ========================================= -->
+
+        <div class="user-guide-section">
+
+
+            <h3>
+                Company Knowledge Base
+            </h3>
+
+
+            <p class="guide-description">
+
+                Upload multiple PDF, DOCX or TXT user guides.
+                The chatbot will use all uploaded guides while
+                generating responses.
+
+            </p>
+
+
+
+            <!-- =====================================
+                 ACTIVE GUIDES
+            ====================================== -->
+
+            <div
+                id="activeGuideContainer"
+                class="active-guide-container"
+            >
+
+
+                <div class="guide-status">
+
+
+                    <span
+                        id="guideStatusDot"
+                        class="status-dot"
+                    ></span>
+
+
+
+                    <div style="width:100%;">
+
+
+                        <strong>
+                            Active User Guides
+                        </strong>
+
+
+                        <p id="activeGuideName">
+
+                            Checking user guides...
+
+                        </p>
+
+
+
+                        <div
+                            id="guideList"
+                            class="guide-list"
+                        ></div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =====================================
+                 UPLOAD FORM
+            ====================================== -->
+
+            <form
+                id="guideUploadForm"
+                enctype="multipart/form-data"
+            >
+
+
+                <input
+
+                    type="file"
+
+                    id="guideFile"
+
+                    name="guide_file"
+
+                    accept=".pdf,.docx,.txt"
+
+                    required
+
+                >
+
+
+
+                <label class="append-option">
+
+
+                    <input
+                        type="checkbox"
+                        id="appendGuide"
+                    >
+
+
+                    Add to existing knowledge base
+
+
+                </label>
+
+
+
+                <div class="append-help">
+
+                    ✓ Checked → Add this guide to existing guides
+
+                    <br>
+
+                    ⚠ Unchecked → Replace the complete knowledge base
+
+                </div>
+
+
+
+                <button
+
+                    type="submit"
+
+                    id="uploadGuideBtn"
+
+                    class="upload-guide-btn"
+
+                >
+
+                    Upload User Guide
+
+                </button>
+
+
+            </form>
+
+
+
+            <!-- =====================================
+                 REMOVE ALL
+            ====================================== -->
+
+            <button
+
+                id="removeGuideBtn"
+
+                type="button"
+
+                class="remove-guide-btn"
+
+                style="display:none;"
+
+            >
+
+                Remove All User Guides
+
+            </button>
+
+
+
+            <!-- MESSAGE -->
+
+            <p
+
+                id="guideMessage"
+
+                class="guide-message"
+
+            ></p>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <script>
+
+
+        /* =========================================
+           ELEMENTS
+        ========================================= */
+
+        const guideUploadForm =
+            document.getElementById("guideUploadForm");
+
+
+        const guideFile =
+            document.getElementById("guideFile");
+
+
+        const appendGuide =
+            document.getElementById("appendGuide");
+
+
+        const removeGuideBtn =
+            document.getElementById("removeGuideBtn");
+
+
+        const activeGuideName =
+            document.getElementById("activeGuideName");
+
+
+        const guideList =
+            document.getElementById("guideList");
+
+
+        const activeGuideContainer =
+            document.getElementById("activeGuideContainer");
+
+
+        const guideStatusDot =
+            document.getElementById("guideStatusDot");
+
+
+        const guideMessage =
+            document.getElementById("guideMessage");
+
+
+        const uploadGuideBtn =
+            document.getElementById("uploadGuideBtn");
+
+
+
+        /* =========================================
+           LOAD GUIDE STATUS
+        ========================================= */
+
+        function loadGuideStatus() {
+
+
+            fetch("/guide_status")
+
+
+            .then(function(response) {
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to load guide status."
+                    );
+
+                }
+
+
+                return response.json();
+
+
+            })
+
+
+            .then(function(data) {
+
+
+                guideList.innerHTML = "";
+
+
+                /* =====================================
+                   GUIDES EXIST
+                ===================================== */
+
+                if (
+
+                    data.active === true
+
+                    &&
+
+                    Array.isArray(data.guides)
+
+                    &&
+
+                    data.guides.length > 0
+
+                ) {
+
+
+                    activeGuideName.innerText =
+
+                        data.guides.length +
+
+                        (
+
+                            data.guides.length === 1
+
+                                ? " user guide is currently active."
+
+                                : " user guides are currently active."
+
+                        );
+
+
+
+                    activeGuideContainer.style.borderLeftColor =
+                        "#16a085";
+
+
+                    guideStatusDot.style.background =
+                        "#16a085";
+
+
+                    guideStatusDot.style.boxShadow =
+                        "0 0 10px rgba(22,160,133,0.7)";
+
+
+                    /* SHOW REMOVE ALL */
+
+                    removeGuideBtn.style.display =
+                        "block";
+
+
+
+                    /* =====================================
+                       DISPLAY GUIDES
+                    ===================================== */
+
+                    data.guides.forEach(
+
+                        function(guide) {
+
+
+                            const guideItem =
+
+                                document.createElement("div");
+
+
+                            guideItem.className =
+                                "guide-item";
+
+
+
+                            /* GUIDE INFORMATION */
+
+                            const guideInfo =
+
+                                document.createElement("div");
+
+
+                            guideInfo.className =
+                                "guide-item-info";
+
+
+
+                            const guideName =
+
+                                document.createElement("div");
+
+
+                            guideName.className =
+                                "guide-item-name";
+
+
+                            guideName.innerText =
+
+                                "📄 " +
+
+                                (
+                                    guide.filename ||
+                                    "Unknown Guide"
+                                );
+
+
+
+                            const guideDate =
+
+                                document.createElement("div");
+
+
+                            guideDate.className =
+                                "guide-item-date";
+
+
+                            guideDate.innerText =
+
+                                "Uploaded: " +
+
+                                (
+                                    guide.uploaded_at ||
+                                    "Unknown"
+                                );
+
+
+
+                            guideInfo.appendChild(
+                                guideName
+                            );
+
+
+                            guideInfo.appendChild(
+                                guideDate
+                            );
+
+
+
+                            /* =================================
+                               REMOVE PARTICULAR GUIDE
+                            ================================= */
+
+                            const removeSingleButton =
+
+                                document.createElement(
+                                    "button"
+                                );
+
+
+                            removeSingleButton.className =
+                                "guide-remove-single-btn";
+
+
+                            removeSingleButton.innerText =
+                                "Remove";
+
+
+
+                            removeSingleButton.addEventListener(
+
+                                "click",
+
+                                function() {
+
+
+                                    const confirmed =
+
+                                        confirm(
+
+                                            "Are you sure you want to remove:\n\n" +
+
+                                            guide.filename +
+
+                                            "\n\nThe chatbot knowledge base will be updated."
+
+                                        );
+
+
+                                    if (!confirmed) {
+
+                                        return;
+
+                                    }
+
+
+                                    removeSingleButton.disabled =
+                                        true;
+
+
+                                    removeSingleButton.innerText =
+                                        "Removing...";
+
+
+
+                                    fetch(
+
+                                        "/remove_specific_user_guide",
+
+                                        {
+
+                                            method: "POST",
+
+                                            headers: {
+
+                                                "Content-Type":
+                                                    "application/json"
+
+                                            },
+
+                                            body:
+
+                                                JSON.stringify({
+
+                                                    filename:
+                                                        guide.filename
+
+                                                })
+
+                                        }
+
+                                    )
+
+
+                                    .then(function(response) {
+
+                                        return response.json();
+
+                                    })
+
+
+                                    .then(function(data) {
+
+
+                                        if (data.success) {
+
+
+                                            guideMessage.style.color =
+                                                "#096d6d";
+
+
+                                            guideMessage.innerText =
+
+                                                "✓ " +
+                                                data.message;
+
+
+                                            loadGuideStatus();
+
+
+                                        }
+
+                                        else {
+
+
+                                            guideMessage.style.color =
+                                                "#c0392b";
+
+
+                                            guideMessage.innerText =
+
+                                                "✗ " +
+                                                data.message;
+
+
+                                            removeSingleButton.disabled =
+                                                false;
+
+
+                                            removeSingleButton.innerText =
+                                                "Remove";
+
+                                        }
+
+
+                                    })
+
+
+                                    .catch(function(error) {
+
+
+                                        console.error(
+                                            error
+                                        );
+
+
+                                        guideMessage.style.color =
+                                            "#c0392b";
+
+
+                                        guideMessage.innerText =
+
+                                            "✗ Unable to remove the guide.";
+
+
+                                        removeSingleButton.disabled =
+                                            false;
+
+
+                                        removeSingleButton.innerText =
+                                            "Remove";
+
+
+                                    });
+
+
+                                }
+
+                            );
+
+
+
+                            /* ADD TO LIST */
+
+                            guideItem.appendChild(
+                                guideInfo
+                            );
+
+
+                            guideItem.appendChild(
+                                removeSingleButton
+                            );
+
+
+                            guideList.appendChild(
+                                guideItem
+                            );
+
+
+                        }
+
+                    );
+
+
+                }
+
+
+
+                /* =====================================
+                   NO GUIDES
+                ===================================== */
+
+                else {
+
+
+                    activeGuideName.innerText =
+
+                        "No user guide is currently active.";
+
+
+                    removeGuideBtn.style.display =
+                        "none";
+
+
+                    activeGuideContainer.style.borderLeftColor =
+                        "#999";
+
+
+                    guideStatusDot.style.background =
+                        "#999";
+
+
+                    guideStatusDot.style.boxShadow =
+                        "none";
+
+
+                }
+
+
+            })
+
+
+            .catch(function(error) {
+
+
+                console.error(
+                    "Guide status error:",
+                    error
+                );
+
+
+                activeGuideName.innerText =
+
+                    "Unable to check user guide status.";
+
+
+            });
+
+
+        }
+
+
+
+        /* =========================================
+           UPLOAD GUIDE
+        ========================================= */
+
+        guideUploadForm.addEventListener(
+
+            "submit",
+
+            function(event) {
+
+
+                event.preventDefault();
+
+
+                if (!guideFile.files.length) {
+
+                    guideMessage.style.color =
+                        "#c0392b";
+
+
+                    guideMessage.innerText =
+                        "Please select a user guide first.";
+
+
+                    return;
+
+                }
+
+
+                const selectedFile =
+                    guideFile.files[0];
+
+
+                const allowedExtensions =
+
+                    [
+                        ".pdf",
+                        ".docx",
+                        ".txt"
+                    ];
+
+
+                const filename =
+                    selectedFile.name.toLowerCase();
+
+
+                const validFile =
+
+                    allowedExtensions.some(
+
+                        function(extension) {
+
+                            return filename.endsWith(
+                                extension
+                            );
+
+                        }
+
+                    );
+
+
+                if (!validFile) {
+
+                    guideMessage.style.color =
+                        "#c0392b";
+
+
+                    guideMessage.innerText =
+
+                        "Only PDF, DOCX and TXT files are allowed.";
+
+
+                    return;
+
+                }
+
+
+
+                /* REPLACE CONFIRMATION */
+
+                if (!appendGuide.checked) {
+
+
+                    const confirmed =
+
+                        confirm(
+
+                            "Replace the existing knowledge base?\n\n" +
+
+                            "All previous user guides will be removed."
+
+                        );
+
+
+                    if (!confirmed) {
+
+                        return;
+
+                    }
+
+
+                }
+
+
+
+                const formData =
+                    new FormData();
+
+
+                formData.append(
+
+                    "guide_file",
+
+                    selectedFile
+
+                );
+
+
+                formData.append(
+
+                    "append",
+
+                    appendGuide.checked
+                        ? "true"
+                        : "false"
+
+                );
+
+
+
+                uploadGuideBtn.disabled =
+                    true;
+
+
+                uploadGuideBtn.innerText =
+                    "Processing...";
+
+
+                guideMessage.style.color =
+                    "#555";
+
+
+                guideMessage.innerText =
+
+                    appendGuide.checked
+
+                        ? "Adding guide..."
+
+                        : "Replacing knowledge base...";
+
+
+
+                fetch(
+
+                    "/upload_guide",
+
+                    {
+
+                        method: "POST",
+
+                        body: formData
+
+                    }
+
+                )
+
+
+                .then(function(response) {
+
+                    return response.json();
+
+                })
+
+
+                .then(function(data) {
+
+
+                    if (data.success) {
+
+
+                        guideMessage.style.color =
+                            "#096d6d";
+
+
+                        guideMessage.innerText =
+
+                            "✓ " +
+
+                            (
+                                data.message ||
+                                "Guide uploaded successfully."
+                            );
+
+
+                        guideUploadForm.reset();
+
+
+                        loadGuideStatus();
+
+
+                    }
+
+                    else {
+
+
+                        guideMessage.style.color =
+                            "#c0392b";
+
+
+                        guideMessage.innerText =
+
+                            "✗ " +
+
+                            (
+                                data.message ||
+                                "Something went wrong."
+                            );
+
+
+                    }
+
+
+                })
+
+
+                .catch(function(error) {
+
+
+                    console.error(error);
+
+
+                    guideMessage.style.color =
+                        "#c0392b";
+
+
+                    guideMessage.innerText =
+                        "✗ Upload failed.";
+
+
+                })
+
+
+                .finally(function() {
+
+
+                    uploadGuideBtn.disabled =
+                        false;
+
+
+                    uploadGuideBtn.innerText =
+                        "Upload User Guide";
+
+
+                });
+
+
+            }
+
+        );
+
+
+
+        /* =========================================
+           REMOVE ALL GUIDES
+        ========================================= */
+
+        removeGuideBtn.addEventListener(
+
+            "click",
+
+            function() {
+
+
+                const confirmed =
+
+                    confirm(
+
+                        "Are you sure you want to remove ALL user guides?\n\n" +
+
+                        "This action cannot be undone."
+
+                    );
+
+
+                if (!confirmed) {
+
+                    return;
+
+                }
+
+
+                removeGuideBtn.disabled =
+                    true;
+
+
+                removeGuideBtn.innerText =
+                    "Removing...";
+
+
+
+                fetch(
+
+                    "/remove_user_guide",
+
+                    {
+
+                        method: "POST"
+
+                    }
+
+                )
+
+
+                .then(function(response) {
+
+                    return response.json();
+
+                })
+
+
+                .then(function(data) {
+
+
+                    if (data.success) {
+
+
+                        guideMessage.style.color =
+                            "#096d6d";
+
+
+                        guideMessage.innerText =
+
+                            "✓ " +
+
+                            (
+                                data.message ||
+                                "All guides removed successfully."
+                            );
+
+
+                        loadGuideStatus();
+
+
+                    }
+
+                    else {
+
+
+                        guideMessage.style.color =
+                            "#c0392b";
+
+
+                        guideMessage.innerText =
+
+                            "✗ " +
+                            data.message;
+
+
+                    }
+
+
+                })
+
+
+                .catch(function(error) {
+
+
+                    console.error(error);
+
+
+                    guideMessage.style.color =
+                        "#c0392b";
+
+
+                    guideMessage.innerText =
+
+                        "✗ Unable to remove guides.";
+
+
+                })
+
+
+                .finally(function() {
+
+
+                    removeGuideBtn.disabled =
+                        false;
+
+
+                    removeGuideBtn.innerText =
+                        "Remove All User Guides";
+
+
+                });
+
+
+            }
+
+        );
+
+
+
+        /* =========================================
+           LOAD ON PAGE OPEN
+        ========================================= */
+
+        document.addEventListener(
+
+            "DOMContentLoaded",
+
+            function() {
+
+                loadGuideStatus();
+
+            }
+
+        );
+
+
+    </script>
+
+
+</body>
+
+</html>
