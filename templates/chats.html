@@ -1,572 +1,2320 @@
 <!doctype html>
+
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
+
+<head>
+
+    <meta charset="UTF-8">
+
     <title>AI Chatbot</title>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}?v=1">
-    <link rel="icon" type="image/png" sizes="96x96" href="{{ url_for('static', filename='favicon-96x96.png') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
-    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- Prevent mobile zoom -->
+    <meta
+        name="viewport"
+        content="width=device-width,
+        initial-scale=1.0,
+        maximum-scale=1.0,
+        minimum-scale=1.0,
+        user-scalable=no"
+    >
+
+
     <style>
-      body {
-        font-family: "Segoe UI", Arial, sans-serif;
-        background: linear-gradient(135deg, #089cbe, #0813ac, #09cba7); /* WhatsApp background */
-        display: flex;
-        flex : 0;
-        justify-content: center;
-        align-items: stretch;
-        height: 100vh;
-        margin: 0;
-      }
-      button, input {
-      font-size: 1rem;
-      padding: 12px;
-      }
 
-      .chat-container {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        max-width: 600px;
-        height: 100vh;
-        background: linear-gradient(135deg, #089cbe, #0813ac, #09cba7);
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        overflow: hidden;
-      }
+        /* ====================================================
+           GLOBAL
+        ==================================================== */
 
-      .chat-header {
-        flex: 0 0 auto;
-        position: fixed;            /* stick to top */
-        top: 0; 
-        left: 0;
-        right: 0;
-        z-index: 10;                     /* anchor at top */                /* stay above messages */
-        background: linear-gradient(135deg, #089cbe, #0e049a, #09cba7); /* blue header */
-        color: #fff;
-        padding: 18px;
-        text-align: center;
-        font-weight: bold;
-        font-size: 1.2rem;
-      }
+        * {
 
-      .chat-box {
-        margin-top: 40px;
-        margin-bottom: 70px;
-        flex: 1 1 auto; 
-        overflow-y: auto;
-        padding: 20px;
-        background: white; /* WhatsApp chat wallpaper */
-        display: flex;
-        flex-direction: column;
-      }
+            box-sizing: border-box;
 
-      .message {
-        margin: 10px 0;
-        padding: 14px 18px;
-        border-radius: 20px; /* rounded pill shape */
-        max-width: 75%; /* balanced width */
-        font-size: 0.95rem;
-        line-height: 1.4;
-        position: relative;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* subtle depth */
-      }
-
-      .user {
-        background: linear-gradient(135deg, #4f5bd5, #962fbf, #0dcfc2); /* blue bubble */
-        color: #fff;
-        align-self: flex-end;
-        border-radius: 20px 20px 0 20px; /* curved with one corner sharper */
-        padding: 0.5rem 0.3rem;
-        margin-bottom: 15px;
-        margin-top: 15px;
-
-      }
-      .Admin {
-        background: linear-gradient(135deg, #8b9d05, #5a0505, #8b9d05); /* soft yellow bubble */
-        color: #ffffff;
-        border: 1px solid #ddd;
-        align-self: flex-start;
-        border-radius: 20px 20px 20px 0;
-        padding: 0.6rem 0.8rem;
-        margin-bottom: 15px;
-        margin-top: 15px;
-      }
-
-      .agent {
-        background: linear-gradient(135deg, #08beaf, #0813ac, #09cba7); /* light gray bubble */
-        color: #ffffff;
-        align-self: flex-start;
-        border-radius: 20px 20px 20px 0; /* opposite corner sharper */
-        padding: 0.5rem 0.5rem;
-        margin-bottom: 15px;
-        margin-top: 15px;
-      }
-
-      .chatbot {
-        background: #f0f0f0;
-        align-self: flex-start;
-        border-radius: 24px;
-      }
-
-      .message::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        width: 0;
-        height: 0;
-      }
-
-      .user::after {
-        content: "";
-        position: absolute;
-        right: -8px;
-        bottom: 0;
-        border-left: linear-gradient(135deg, #340280, #110819, #1e0248);
-        border-top: 8px solid transparent;
-        border-bottom: 8px solid transparent;
-      }
-
-      .agent::after {
-        content: "";
-        position: absolute;
-        left: -8px;
-        bottom: 0;
-        border-right: 8px solid #f1f1f1;
-        border-top: 8px solid transparent;
-        border-bottom: 8px solid transparent;
-      }
-
-      .chat-form {
-        flex: 0 0 auto;              /* fixed height */
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 10;           /* stick to bottom */  
-        display: flex;
-        padding: 12px;
-        border-top: linear-gradient(135deg, #08beaf, #0813ac, #09cba7);
-        background: linear-gradient(135deg, #08beaf, #0813ac, #09cba7);
-        
-      }
-
-      .chat-form input {
-        flex: 1;
-        padding: 12px;
-        border: none;
-        border-radius: 25px;
-        outline: none;
-        background: #fff;
-        font-size: 1rem;
-      }
-      .satisfied {
-        position: absolute;
-        right: 15px;
-        top: 50%;
-        padding: 8px 12px;
-        transform: translateY(-50%);
-        background: #fff;
-        color: #0967bf;
-        border: none;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        transition: all 0.3s ease;
-      }
-
-      .satisfied:hover {
-        background: #eae6ff;
-        color: #0685fc;
-        transform: translateY(-50%) scale(1.05);
-      }
-      .modal {
-        display: none; /* hidden by default */
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5); /* semi-transparent background */
-      }
-
-      .modal-content {
-        background: linear-gradient(135deg, #028080, #056707, #05727c);
-        color: white;
-        margin: 15% auto;
-        padding: 20px;
-        border-radius: 8px;
-        width: 300px;
-        text-align: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      }
-
-      .modal-content button {
-        margin: 10px;
-        padding: 8px 14px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: bold;
-      }
-
-      #okBtn {
-        background: linear-gradient(135deg, #0fa6a6, #08970b, #0fa6a6);
-        color: #fff;
-      }
-
-      #cancelBtn {
-        background: #ccc;
-        color: #333;
-      }
-      .remove_modal {
-        display: none; /* hidden by default */
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5); /* semi-transparent background */
-      }
-
-      .remove-modal-content {
-        background: linear-gradient(135deg, #8b9d05, #5a0505, #8b9d05);
-        color:white;
-        margin: 15% auto;
-        padding: 20px;
-        border-radius: 8px;
-        width: 300px;
-        text-align: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      }
-
-      .remove-modal-content button {
-        margin: 10px;
-        padding: 8px 14px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: bold;
-      }
-
-      #remove_okBtn {
-        background: linear-gradient(135deg, #b1cb09, #ac0808, #b1cb09);
-        color: #fff;
-      }
-
-      #remove_cancelBtn {
-        background: #ccc;
-        color: #333;
-      }
-
-      .satisfied.active {
-        background: green;
-        color: white;
-      }
-      .get_agent.active {
-        background: green;
-        color: white;
-      }
-
-
-      .chat-form button {
-        margin-left: 10px;
-        padding: 12px 16px;
-        background: linear-gradient(135deg, #10a0d4, #5708ac, #09cba7);
-        color: #fff;
-        border: none;
-        border-radius: 25px;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 1rem;
-      }
-      /* Container for the handover message */
-      .handover_div {
-        background: linear-gradient(135deg, #6a11cb, #2575fc);
-        color: #fff;
-        padding: 20px;
-        margin: 15px auto;
-        border-radius: 12px;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        text-align: center;
-        font-size: 1.1em;
-        font-weight: 500;
-        max-width: 80%;
-        animation: fadeIn 0.4s ease-in-out;
-      }
-
-      /* YES button styling */
-      .handover_btn {
-        margin-top: 12px;
-        padding: 10px 22px;
-        background: #ffffff;
-        color: #2575fc;
-        font-weight: bold;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-      }
-
-      /* Hover effect */
-      .handover_btn :hover {
-        background: #2575fc;
-        color: #fff;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.25);
-      }
-      /* NO button styling */
-      .No_btn {
-        margin-top: 12px;
-        padding: 10px 22px;
-        background: #ffffff;
-        color: #2575fc;
-        font-weight: bold;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-      }
-
-      /* Hover effect */
-      .No_btn :hover {
-        background: #2575fc;
-        color: #fff;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.25);
-      }
-
-      /* Subtle fade-in animation */
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      .bot{
-        background: linear-gradient(135deg,  #2660e9, #401bb8, #419ab3); /* soft yellow bubble */
-        color: #fefcfc;
-        border: 1px solid #ddd;
-        align-self: flex-start;
-        border-radius: 20px 20px 20px 0;
-        padding: 0.6rem 0.8rem;
-      }
-
-      .chat-form button:hover {
-        background: background: linear-gradient(135deg, #089cbe, #0813ac, #09cba7);;
-      }
-      @media (max-width: 480px) {
-          body {
-            align-items: stretch; /* ensure full height fit on mobile */
-          }
-        .chat-container {
-          width: 100%;
-          height: 100vh;
-          border-radius: 0;   /* remove rounded corners for full-screen look */
         }
+
+
+        html,
+        body {
+
+            margin: 0;
+
+            padding: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            overflow: hidden;
+
+        }
+
+
+        body {
+
+            font-family:
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #089cbe,
+                    #0813ac,
+                    #09cba7
+                );
+
+        }
+
+
+        /* ====================================================
+           BACKGROUND OVERLAY
+        ==================================================== */
+
+        .satisfaction-modal {
+
+            display: none;
+
+            position: fixed;
+
+            inset: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            background:
+                rgba(0, 0, 0, 0.45);
+
+            z-index: 9999;
+
+            align-items: center;
+
+            justify-content: center;
+
+        }
+
+
+        /* ====================================================
+           MAIN DIALOG BOX
+        ==================================================== */
+
+        .satisfaction-dialog {
+
+            width: 290px;
+
+            min-height: 145px;
+
+            border-radius: 10px;
+
+            padding: 22px 20px;
+
+            text-align: center;
+
+            color: white;
+
+            box-shadow:
+                0 8px 25px rgba(0, 0, 0, 0.35);
+
+            animation:
+                popupAnimation 0.25s ease-out;
+
+        }
+
+
+        /* ====================================================
+           SATISFIED DIALOG
+        ==================================================== */
+
+        .satisfied-dialog {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #147c70,
+                    #005c28,
+                    #006633,
+                    #0f6f72
+                );
+
+        }
+
+
+        /* ====================================================
+           REMOVE SATISFACTION DIALOG
+        ==================================================== */
+
+        .remove-dialog {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #8b8700,
+                    #a22a00,
+                    #7b0000,
+                    #8a8700
+                );
+
+        }
+
+
+        /* ====================================================
+           DIALOG TEXT
+        ==================================================== */
+
+        .satisfaction-dialog p {
+
+            margin-top: 8px;
+
+            margin-bottom: 20px;
+
+            font-size: 15px;
+
+            font-weight: 500;
+
+            line-height: 1.5;
+
+            color: white;
+
+        }
+
+
+        /* ====================================================
+           DIALOG BUTTONS
+        ==================================================== */
+
+        .satisfaction-buttons {
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            gap: 20px;
+
+        }
+
+
+        .satisfaction-buttons button {
+
+            border: none;
+
+            border-radius: 5px;
+
+            padding: 8px 17px;
+
+            min-width: 58px;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                transform 0.2s ease,
+                opacity 0.2s ease;
+
+        }
+
+
+        .satisfaction-buttons button:hover {
+
+            transform: scale(1.05);
+
+            opacity: 0.9;
+
+        }
+
+
+        /* ====================================================
+           GREEN YES BUTTON
+        ==================================================== */
+
+        .satisfaction-yes {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #00b85c,
+                    #007a35
+                );
+
+            color: white;
+
+        }
+
+
+        /* ====================================================
+           RED YES BUTTON
+        ==================================================== */
+
+        .remove-yes {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ff3b00,
+                    #b00000
+                );
+
+            color: white;
+
+        }
+
+
+        /* ====================================================
+           NO BUTTON
+        ==================================================== */
+
+        .satisfaction-no {
+
+            background: #e8e8e8;
+
+            color: #333;
+
+        }
+
+
+        /* ====================================================
+           POPUP ANIMATION
+        ==================================================== */
+
+        @keyframes popupAnimation {
+
+            from {
+
+                opacity: 0;
+
+                transform:
+                    scale(0.8)
+                    translateY(-20px);
+
+            }
+
+
+            to {
+
+                opacity: 1;
+
+                transform:
+                    scale(1)
+                    translateY(0);
+
+            }
+
+        }
+
+
+        /* ====================================================
+           CHAT CONTAINER
+
+           IMPORTANT:
+           The entire chatbot fills the screen and DOES NOT
+           scroll. Only the chat-box scrolls.
+        ==================================================== */
+
+        .chat-container {
+
+            width: 100%;
+
+            max-width: 800px;
+
+            margin: auto;
+
+            background: white;
+
+            overflow: hidden;
+
+            /*
+            Three fixed areas:
+
+            Header
+            Chat messages
+            Input form
+            */
+
+            display: grid;
+
+            grid-template-rows:
+                auto
+                minmax(0, 1fr)
+                auto;
+
+            height: 100vh;
+
+            height: 100svh;
+
+            height: calc(var(--app-height, 100vh) * 1);
+
+        }
+
+
+        /* ====================================================
+           HEADER
+
+           flex-shrink: 0 ensures the header never scrolls
+           away with chat messages.
+        ==================================================== */
+
+        .chat-header {
+
+            padding: 18px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #089cbe,
+                    #0e049a,
+                    #09cba7
+                );
+
+            color: white;
+
+            font-weight: bold;
+
+            font-size: 20px;
+
+            text-align: center;
+
+            position: relative;
+
+            z-index: 10;
+
+            width: 100%;
+
+        }
+
+
+        /* ====================================================
+           SATISFIED BUTTON
+        ==================================================== */
+
+        .satisfied {
+
+            position: absolute;
+
+            right: 15px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            border: none;
+
+            border-radius: 8px;
+
+            padding: 8px 12px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+
+            color: #0967bf;
+
+            background: white;
+
+        }
+
+
+        .satisfied.active {
+
+            background: green;
+
+            color: white;
+
+        }
+
+
+        /* ====================================================
+           CHAT BOX
+
+           THIS IS THE ONLY PART THAT SCROLLS
+        ==================================================== */
+
+        .chat-box {
+
+            min-height: 0;
+
+            overflow-y: auto;
+
+            overflow-x: hidden;
+
+            padding: 20px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 10px;
+
+            background: #f7f7f7;
+
+            overscroll-behavior: contain;
+
+        }
+
+        /* ====================================================
+           MESSAGE
+        ==================================================== */
 
         .message {
-          max-width: 95%;     /* bubbles fit better on small screens */
-          font-size: 0.85rem; /* slightly smaller text */
+
+            max-width: 78%;
+
+            padding: 12px 16px;
+
+            border-radius: 18px;
+
+            line-height: 1.5;
+
+            word-wrap: break-word;
+
+            overflow-wrap: break-word;
+
+            white-space: pre-wrap;
+
         }
-      }
+
+
+        /* ====================================================
+           USER
+        ==================================================== */
+
+        .user {
+
+            align-self: flex-end;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #4f5bd5,
+                    #962fbf,
+                    #0dcfc2
+                );
+
+            border-radius:
+                18px 18px 3px 18px;
+
+        }
+
+
+        /* ====================================================
+           BOT
+        ==================================================== */
+
+        .bot {
+
+            align-self: flex-start;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2660e9,
+                    #401bb8,
+                    #419ab3
+                );
+
+            border-radius:
+                18px 18px 18px 3px;
+
+        }
+
+
+        /* ====================================================
+           AGENT
+        ==================================================== */
+
+        .agent {
+
+            align-self: flex-start;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #08beaf,
+                    #0813ac,
+                    #09cba7
+                );
+
+            border-radius:
+                18px 18px 18px 3px;
+
+        }
+
+
+        /* ====================================================
+           ADMIN
+        ==================================================== */
+
+        .Admin {
+
+            align-self: flex-start;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #8b9d05,
+                    #5a0505,
+                    #8b9d05
+                );
+
+            border-radius:
+                18px 18px 18px 3px;
+
+        }
+
+
+        /* ====================================================
+           THINKING INDICATOR
+        ==================================================== */
+
+        .thinking {
+
+            align-self: flex-start;
+
+            display: none;
+
+            padding: 10px 15px;
+
+            background: #e8e8e8;
+
+            border-radius: 18px;
+
+            color: #555;
+
+            font-size: 14px;
+
+        }
+
+
+        .thinking.visible {
+
+            display: block;
+
+        }
+
+
+        .dots span {
+
+            animation:
+                blink 1.4s infinite;
+
+            font-size: 20px;
+
+        }
+
+
+        .dots span:nth-child(2) {
+
+            animation-delay: .2s;
+
+        }
+
+
+        .dots span:nth-child(3) {
+
+            animation-delay: .4s;
+
+        }
+
+
+        @keyframes blink {
+
+            0%,
+            100% {
+
+                opacity: .2;
+
+            }
+
+
+            50% {
+
+                opacity: 1;
+
+            }
+
+        }
+
+
+        /* ====================================================
+           CHAT FORM
+
+           flex-shrink: 0 means it always remains at bottom.
+        ==================================================== */
+
+.chat-form {
+
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 12px;
+
+    padding-bottom:
+        max(
+            12px,
+            env(safe-area-inset-bottom)
+        );
+
+    background:
+        linear-gradient(
+            135deg,
+            #08beaf,
+            #0813ac,
+            #09cba7
+        );
+
+    z-index: 100;
+
+}
+
+
+        .chat-form input {
+
+            flex: 1;
+
+            min-width: 0;
+
+            border: none;
+
+            outline: none;
+
+            border-radius: 25px;
+
+            padding: 14px;
+
+            font-size: 16px;
+
+        }
+
+
+        .chat-form button {
+
+            flex-shrink: 0;
+
+            border: none;
+
+            border-radius: 25px;
+
+            padding: 12px 18px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+
+            color: white;
+
+        }
+
+
+        /* ====================================================
+           SEND BUTTON
+        ==================================================== */
+
+        #send-btn {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #10a0d4,
+                    #5708ac,
+                    #09cba7
+                );
+
+        }
+
+
+        /* ====================================================
+           STOP BUTTON
+        ==================================================== */
+
+        #stop-generation-btn {
+
+            display: none;
+
+            background: #dc3545;
+
+        }
+
+
+        #stop-generation-btn:hover {
+
+            background: #b02a37;
+
+        }
+
+
+        #stop-generation-btn:disabled {
+
+            opacity: .6;
+
+            cursor: not-allowed;
+
+        }
+
+
+        /* ====================================================
+           HANDOVER
+        ==================================================== */
+
+        .handover_div {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #6a11cb,
+                    #2575fc
+                );
+
+            color: white;
+
+            padding: 18px;
+
+            border-radius: 12px;
+
+            text-align: center;
+
+        }
+
+
+        .handover_btn,
+        .No_btn {
+
+            margin: 8px;
+
+            padding: 10px 20px;
+
+            border: none;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+
+        }
+        /* ====================================================
+        HUMAN AGENT BUTTON
+        ==================================================== */
+
+        .human-agent {
+
+            position: absolute;
+
+            left: 15px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            border: none;
+
+            border-radius: 8px;
+
+            padding: 8px 12px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ff9800,
+                    #e65100
+                );
+
+        }
+        /* ====================================================
+   HUMAN AGENT MODAL
+==================================================== */
+
+.human-agent-modal {
+
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    width: 100%;
+
+    height: 100%;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    z-index: 9999;
+
+    align-items: center;
+
+    justify-content: center;
+
+}
+
+
+/* ====================================================
+   HUMAN AGENT DIALOG
+==================================================== */
+
+.human-agent-dialog {
+
+            width: 290px;
+
+            min-height: 145px;
+
+            border-radius: 10px;
+
+            padding: 22px 20px;
+
+            text-align: center;
+
+            color: white;
+
+            box-shadow:
+                0 8px 25px rgba(0, 0, 0, 0.35);
+
+            animation:
+                popupAnimation 0.25s ease-out;
+
+    background:
+        linear-gradient(
+            135deg,
+            #e6a900,
+            #ff6a00,
+            #b80000,
+            #c4a300
+        );
+
+    animation:
+        popupAnimation 0.25s ease-out;
+
+}
+
+
+/* ====================================================
+   HUMAN AGENT TEXT
+==================================================== */
+
+.human-agent-dialog p {
+
+    margin: 0;
+
+    padding: 0 15px 15px 15px;
+
+    font-size: 16px;
+
+    font-weight: 500;
+
+    line-height: 1.45;
+
+    color: black;
+
+}
+
+
+/* ====================================================
+   HUMAN AGENT BUTTON AREA
+==================================================== */
+
+.human-agent-buttons {
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 20px;
+
+    padding: 0 0 0 0;
+
+}
+
+
+/* ====================================================
+   HUMAN AGENT BUTTONS
+==================================================== */
+
+.human-agent-buttons button {
+
+    border: none;
+
+    border-radius: 5px;
+
+    min-width: 63px;
+
+    padding: 10px 16px;
+
+    font-size: 14px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+
+}
+
+
+.human-agent-buttons button:hover {
+
+    transform: scale(1.05);
+
+}
+
+
+/* ====================================================
+   YES BUTTON
+==================================================== */
+
+.human-agent-yes {
+
+    background: #ff7300;
+
+    color: white;
+
+}
+
+
+/* ====================================================
+   NO BUTTON
+==================================================== */
+
+.human-agent-no {
+
+    background: #eeeeee;
+
+    color: #333;
+
+}
+
+        /* ====================================================
+           MOBILE
+        ==================================================== */
+
+        @media (max-width: 600px) {
+
+            .chat-container {
+
+                max-width: none;
+
+            }
+
+
+            .chat-header {
+
+                padding: 15px;
+
+                font-size: 18px;
+
+            }
+
+
+            .message {
+
+                max-width: 90%;
+
+            }
+            /* ====================================================
+
+
+            .chat-box {
+
+                padding: 12px;
+
+            }
+
+
+            .chat-form {
+
+                padding: 10px;
+
+                gap: 6px;
+
+            }
+
+
+            .chat-form input {
+
+                padding: 12px;
+
+                font-size: 16px;
+
+            }
+
+
+            .chat-form button {
+
+                padding: 10px 14px;
+
+            }
+
+
+            .satisfaction-dialog {
+
+                width: 85%;
+
+            }
+
+        }
+
     </style>
-  </head>
-  <body>
-    <div class="chat-container">
-      <header class="chat-header">
-        User's Chatbot
-        <a href="#"><button  class="satisfied" id="satisfied">Satisfied</button></a>
-        
-      </header>
-      <!-- Custom Dialog -->
-      <div id="satisfiedModal" class="modal">
-        <div class="modal-content">
-          <p>Do you want to mark yourself as a satisfied user?</p>
-          <button id="okBtn">Yes</button>
-          <button id="cancelBtn">No</button>
-        </div>
-      </div>
-      <div id="removesatisfiedModal" class="remove_modal">
-        <div class="remove-modal-content">
-          <p>Do you want to remove your satisfaction status?</p>
-          <button id="remove_okBtn">Yes</button>
-          <button id="remove_cancelBtn">No</button>
-        </div>
-      </div>
 
-      <div class="chat-box" id="chat-box">
-        {% for mes in mess2 %}
-        <div class="{{mes.role}}">{{mes.role}} : {{mes.message}}</div>
-        {% endfor %}
-        <div class="bot">bot : {{message}}</div>
-        <!-- Messages will appear here -->
-      </div>
-      <form class="chat-form" id="chat-form">
-        <input
-          type="text"
-          id="message"
-          name="message"
-          placeholder="Type your message..."
-          required
-        />
-        <button type="submit">Send</button>
-      </form>
+</head>
+
+
+<body>
+
+
+<!-- ========================================= -->
+<!-- MARK USER AS SATISFIED MODAL -->
+<!-- ========================================= -->
+
+<div
+    id="satisfiedModal"
+    class="satisfaction-modal"
+>
+
+    <div class="satisfaction-dialog satisfied-dialog">
+
+        <p>
+
+            Do you want to mark yourself as a
+            <br>
+
+            satisfied user?
+
+        </p>
+
+
+        <div class="satisfaction-buttons">
+
+            <button
+                id="confirmSatisfiedBtn"
+                class="satisfaction-yes"
+                type="button"
+            >
+
+                Yes
+
+            </button>
+
+
+            <button
+                id="cancelSatisfiedBtn"
+                class="satisfaction-no"
+                type="button"
+            >
+
+                No
+
+            </button>
+
+        </div>
+
     </div>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script>
-    
-      var socket = io();
-      var user_Id = "{{user_id}}";
-      var room_Id = "{{room_id}}";
-      var agent_Id = "{{agent_id}}";
-      let count = 0;
-      const satisfiedbtn = document.getElementById("satisfied");
-      const modal = document.getElementById("satisfiedModal");
-      const okbtn = document.getElementById("okBtn");
-      const cancelbtn = document.getElementById("cancelBtn");
-      const remove_modal = document.getElementById("removesatisfiedModal");
-      const remove_okbtn = document.getElementById("remove_okBtn");
-      const remove_cancelbtn = document.getElementById("remove_cancelBtn");
 
-      function scrollToBottom() {
-        const chatBox = document.getElementById("chat-box");
-        chatBox.scrollTop = chatBox.scrollHeight;
-      }
-
-      socket.emit("join_user_room", { user_id: user_Id});
-
-      
-      
-      socket.on("join_user_success", function(data){
-        room_Id = data.room_id;
-        socket.emit("chat_data", {
-            room_id: room_Id
-        });
-      });
-      
-
-      socket.on("chat_history", function (data) {
-        var chatBox = document.getElementById("chat-box");
-        chatBox.innerHTML = ""; // clear existing messages
-
-        data.forEach(function (data) {
-          var div = document.createElement("div");
-          div.className = data.role;
-          div.innerText = data.role + " : " + data.message;
-          div.appendChild(document.createElement("br"));
-          chatBox.appendChild(div);
-          scrollToBottom();
-        });
-      });
-
-      
-      document.getElementById("chat-form").addEventListener("submit", function (e) {
-          e.preventDefault();
-          var msg = document.getElementById("message").value;
-          socket.emit("user_response", {message: msg,user_id: user_Id,room_id: room_Id,agent_id: agent_Id});
-          socket.emit("Admin_analysis",{});
-          document.getElementById("message").value = "";
-        });
-
-      socket.on("new_message", function (data) {
-        var div = document.createElement("div");
-        div.className = data.role;
-        div.innerText = data.role + " :" + data.message;
-        document.querySelector("#chat-box").appendChild(div);
-        scrollToBottom();
-      });
-      socket.on("bot_message", function(data) {
-        if(data.status === 1){
-          return;
-        }
-        var div = document.createElement("div");
-        div.className = data.role_auto;
-        div.innerText = data.role_auto + " :" + data.bot_reply;
-        document.querySelector("#chat-box").appendChild(div);
-        scrollToBottom();
-
-      if (data.handover === true) {
-        // Create dialog-like container
-        var handover = document.createElement("div");
-        handover.className = "handover_div";
-
-        var handoverText = document.createElement("span");
-        handoverText.innerText = "Want to connect with a human agent?";
-
-        // Create YES button
-        var handover_btn = document.createElement("button");
-        handover_btn.className = "handover_btn";
-        handover_btn.innerText = "YES";
-        handover_btn.type = "button";
-
-        var No_btn = document.createElement("button");
-        No_btn.className = "No_btn";
-        No_btn.innerText = "NO";
-        No_btn.type = "button";
-
-        // Attach click handler right here
-        handover_btn.addEventListener("click", function(e) {
-          e.preventDefault();
-          socket.emit("agent_connect", {});
-          socket.emit("USERS",{});
-          alert("An agent will join you shortly!");
-          humanInChat = true;
-          handover.style.display = "none";
-          
-        });
-        No_btn.addEventListener("click", function(e) {
-          e.preventDefault();
-          handover.style.display = "none";
-        });
+</div>
 
 
-        handover.appendChild(handoverText);
-        handover.appendChild(document.createElement("br"));
-        handover.appendChild(handover_btn);
-        handover.appendChild(document.createTextNode("\u00A0"));
-        handover.appendChild(No_btn);
-        document.querySelector("#chat-box").appendChild(handover);
-        scrollToBottom();
-      }
+
+<!-- ========================================= -->
+<!-- REMOVE SATISFACTION MODAL -->
+<!-- ========================================= -->
+
+<div
+    id="removeSatisfiedModal"
+    class="satisfaction-modal"
+>
+
+    <div class="satisfaction-dialog remove-dialog">
+
+        <p>
+
+            Do you want to remove your satisfaction
+            <br>
+
+            status?
+
+        </p>
+
+
+        <div class="satisfaction-buttons">
+
+            <button
+                id="confirmRemoveSatisfiedBtn"
+                class="remove-yes"
+                type="button"
+            >
+
+                Yes
+
+            </button>
+
+
+            <button
+                id="cancelRemoveSatisfiedBtn"
+                class="satisfaction-no"
+                type="button"
+            >
+
+                No
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ========================================= -->
+<!-- HUMAN AGENT CONFIRMATION MODAL -->
+<!-- ========================================= -->
+
+<div
+    id="humanAgentModal"
+    class="satisfaction-modal"
+>
+
+    <div class="human-agent-dialog">
+
+        <p>
+
+            Do you want to connect with a
+            Human Agent?
+
+        </p>
+
+
+        <div class="satisfaction-buttons">
+
+            <button
+                id="confirmHumanAgentBtn"
+                class="human-agent-yes"
+                type="button"
+            >
+                Yes
+            </button>
+
+
+            <button
+                id="cancelHumanAgentBtn"
+                class="satisfaction-no"
+                type="button"
+            >
+                No
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================= -->
+<!-- CHAT CONTAINER -->
+<!-- ========================================= -->
+
+<div class="chat-container">
+
+
+    <!-- ========================================= -->
+    <!-- HEADER -->
+    <!-- ========================================= -->
+
+    <header class="chat-header">
+
+    <!-- HUMAN AGENT BUTTON -->
+    <button
+        class="human-agent"
+        id="humanAgentBtn"
+        type="button"
+    >
+        Human Agent
+    </button>
+
+
+    <!-- HEADER TITLE -->
+    <span class="chat-title">
+        User's Chatbot
+    </span>
+
+
+    <!-- SATISFIED BUTTON -->
+    <button
+        class="satisfied"
+        id="satisfied"
+        type="button"
+    >
+        Satisfied
+    </button>
+
+</header>
+
+
+
+    <!-- ========================================= -->
+    <!-- CHAT AREA -->
+    <!-- ========================================= -->
+
+    <div
+        class="chat-box"
+        id="chat-box"
+    >
+
+
+        {% for mes in mess2 %}
+
+        <div class="message {{ mes.role }}">
+
+            {{ mes.role }} :
+            {{ mes.message }}
+
+        </div>
+
+        {% endfor %}
+
+
+        <!-- AI THINKING -->
+
+        <div
+            id="thinking"
+            class="thinking"
+        >
+
+            AI is thinking
+
+            <span class="dots">
+
+                <span>.</span>
+                <span>.</span>
+                <span>.</span>
+
+            </span>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- ========================================= -->
+    <!-- CHAT FORM -->
+    <!-- ========================================= -->
+
+    <form
+        class="chat-form"
+        id="chat-form"
+    >
+
+
+        <input
+
+            type="text"
+
+            id="message"
+
+            placeholder="Type your message..."
+
+            autocomplete="off"
+
+            required
+
+        >
+
+
+        <button
+            type="button"
+            id="stop-generation-btn"
+        >
+
+            Stop
+
+        </button>
+
+
+        <button
+            type="submit"
+            id="send-btn"
+        >
+
+            Send
+
+        </button>
+
+
+    </form>
+
+
+</div>
+
+
+
+<!-- ========================================= -->
+<!-- SOCKET.IO -->
+<!-- ========================================= -->
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+
+<script>
+
+
+/* ========================================================
+   SOCKET CONNECTION
+======================================================== */
+
+const socket = io();
+
+
+/* ========================================================
+   USER INFORMATION
+======================================================== */
+
+let user_Id = "{{ user_id }}";
+
+let room_Id = "{{ room_id }}";
+
+let agent_Id = "{{ agent_id }}";
+
+
+/* ========================================================
+   ELEMENTS
+======================================================== */
+
+const humanAgentBtn = 
+    document.getElementById("humanAgentBtn");
+
+const humanAgentModal = 
+    document.getElementById("humanAgentModal");
+
+
+const confirmHumanAgentBtn =
+    document.getElementById("confirmHumanAgentBtn");
+
+
+const cancelHumanAgentBtn =
+    document.getElementById("cancelHumanAgentBtn");
+
+const chatBox =
+    document.getElementById("chat-box");
+
+
+const chatForm =
+    document.getElementById("chat-form");
+
+
+const messageInput =
+    document.getElementById("message");
+
+
+const sendBtn =
+    document.getElementById("send-btn");
+
+
+const stopBtn =
+    document.getElementById(
+        "stop-generation-btn"
+    );
+
+
+const thinking =
+    document.getElementById("thinking");
+
+
+const satisfiedBtn =
+    document.getElementById("satisfied");
+
+
+const satisfiedModal =
+    document.getElementById("satisfiedModal");
+
+
+const removeSatisfiedModal =
+    document.getElementById(
+        "removeSatisfiedModal"
+    );
+
+
+const confirmSatisfiedBtn =
+    document.getElementById(
+        "confirmSatisfiedBtn"
+    );
+
+
+const cancelSatisfiedBtn =
+    document.getElementById(
+        "cancelSatisfiedBtn"
+    );
+
+
+const confirmRemoveSatisfiedBtn =
+    document.getElementById(
+        "confirmRemoveSatisfiedBtn"
+    );
+
+
+const cancelRemoveSatisfiedBtn =
+    document.getElementById(
+        "cancelRemoveSatisfiedBtn"
+    );
+
+
+/* ========================================================
+   STREAMING MESSAGE
+======================================================== */
+
+let streamingMessage = null;
+
+let isGenerating = false;
+
+
+/* ========================================================
+   SCROLL
+======================================================== */
+
+function scrollToBottom() {
+
+    chatBox.scrollTop =
+        chatBox.scrollHeight;
+
+}
+
+
+/* ========================================================
+   ADD MESSAGE
+======================================================== */
+
+function addMessage(
+    role,
+    message
+) {
+
+    const div =
+        document.createElement("div");
+
+
+    div.className =
+        "message " + role;
+
+
+    div.innerText =
+        role + " : " + message;
+
+
+    chatBox.insertBefore(
+        div,
+        thinking
+    );
+
+
+    scrollToBottom();
+
+}
+
+
+/* ========================================================
+   JOIN USER ROOM
+======================================================== */
+
+socket.emit(
+
+    "join_user_room",
+
+    {
+
+        user_id: user_Id
+
+    }
+
+);
+
+/* ========================================================
+   HUMAN AGENT BUTTON
+======================================================== */
+
+humanAgentBtn.addEventListener("click",function() {
+    humanAgentModal.style.display = "flex";
+
     });
 
-      satisfiedbtn.addEventListener("click",function(e){
-        e.preventDefault();
-        if(satisfiedbtn.classList.contains("active")){
-          remove_modal.style.display = "block";
+
+/* ========================================================
+   CONFIRM HUMAN AGENT
+======================================================== */
+
+confirmHumanAgentBtn.addEventListener(
+
+    "click",
+
+    function() {
+
+        /* Close dialog */
+
+        humanAgentModal.style.display =
+            "none";
+
+
+        /* Show confirmation */
+
+        alert(
+            "Human Agent will join you shortly!"
+        );
+
+
+        /* Trigger Human Agent connection */
+
+        socket.emit(
+
+            "agent_connect",
+
+            {}
+
+        );
+
+
+        socket.emit(
+
+            "USERS",
+
+            {}
+
+        );
+
+    }
+
+);
+
+/* ========================================================
+   CANCEL HUMAN AGENT
+======================================================== */
+
+cancelHumanAgentBtn.addEventListener(
+
+    "click",
+
+    function() {
+
+        humanAgentModal.style.display =
+            "none";
+
+    }
+
+);
+/* ========================================================
+   ROOM JOIN SUCCESS
+======================================================== */
+
+socket.on("join_user_success",
+
+    function(data) {
+
+        room_Id =
+            data.room_id;
+
+
+        socket.emit(
+
+            "chat_data",
+
+            {
+
+                room_id:
+                    room_Id
+
+            }
+
+        );
+
+    }
+
+);
+
+
+/* ========================================================
+   CHAT HISTORY
+======================================================== */
+
+socket.on(
+
+    "chat_history",
+
+    function(data) {
+
+        const thinkingElement =
+            document.getElementById(
+                "thinking"
+            );
+
+
+        chatBox.innerHTML = "";
+
+
+        data.forEach(
+
+            function(item) {
+
+                const div =
+                    document.createElement("div");
+
+
+                div.className =
+                    "message " + item.role;
+
+
+                div.innerText =
+                    item.role +
+                    " : " +
+                    item.message;
+
+
+                chatBox.appendChild(
+                    div
+                );
+
+            }
+
+        );
+
+
+        chatBox.appendChild(
+            thinkingElement
+        );
+
+
+        scrollToBottom();
+
+    }
+
+);
+
+
+/* ========================================================
+   SEND MESSAGE
+======================================================== */
+
+chatForm.addEventListener(
+
+    "submit",
+
+    function(event) {
+
+        event.preventDefault();
+
+
+        const message =
+            messageInput.value.trim();
+
+
+        if (!message) {
+
+            return;
+
         }
-        else{
-          modal.style.display = "block";
+
+
+        if (isGenerating) {
+
+            return;
+
         }
-        
-      });
-      okbtn.addEventListener("click",function(){
-        satisfiedbtn.classList.add("active");
-        socket.emit("user_satisfied",{});
-        socket.emit("satisfied_users");
-        socket.emit("Admin_analysis",{});
-        modal.style.display = "none";
-      });
-      cancelbtn.addEventListener("click",function(){
-        modal.style.display = "none";
-      });
-      remove_okbtn.addEventListener("click",function(){
-        satisfiedbtn.classList.remove("active");
-        socket.emit("remove_satisfied_user");
-        socket.emit("satisfied_users");
-        socket.emit("Admin_analysis",{});
-        remove_modal.style.display = "none";
-      });
-      remove_cancelbtn.addEventListener("click",function(){
-        remove_modal.style.display = "none";
-      });
-    </script>
-  </body>
+
+
+        socket.emit(
+
+            "user_response",
+
+            {
+
+                message: message,
+
+                user_id: user_Id,
+
+                room_id: room_Id,
+
+                agent_id: agent_Id
+
+            }
+
+        );
+
+
+        messageInput.value = "";
+
+
+        socket.emit(
+
+            "Admin_analysis",
+
+            {}
+
+        );
+
+    }
+
+);
+
+
+/* ========================================================
+   USER MESSAGE FROM SERVER
+======================================================== */
+
+socket.on(
+
+    "new_message",
+
+    function(data) {
+
+        addMessage(
+
+            data.role,
+
+            data.message
+
+        );
+
+    }
+
+);
+
+
+/* ========================================================
+   GENERATION STARTED
+======================================================== */
+
+socket.on(
+
+    "generation_started",
+
+    function() {
+
+        isGenerating = true;
+
+
+        thinking.classList.add(
+            "visible"
+        );
+
+
+        stopBtn.style.display =
+            "block";
+
+
+        stopBtn.disabled =
+            false;
+
+
+        stopBtn.innerText =
+            "Stop";
+
+
+        messageInput.disabled =
+            true;
+
+
+        sendBtn.disabled =
+            true;
+
+
+        scrollToBottom();
+
+    }
+
+);
+
+
+/* ========================================================
+   STREAM BOT RESPONSE
+======================================================== */
+
+socket.on(
+
+    "bot_stream",
+
+    function(data) {
+
+        thinking.classList.remove(
+            "visible"
+        );
+
+
+        if (!streamingMessage) {
+
+            streamingMessage =
+                document.createElement(
+                    "div"
+                );
+
+
+            streamingMessage.className =
+                "message bot";
+
+
+            chatBox.insertBefore(
+                streamingMessage,
+                thinking
+            );
+
+        }
+
+
+        /*
+        Supports both:
+
+        data.text
+        and
+        data.chunk
+        */
+
+        const responseText =
+            data.text !== undefined
+                ? data.text
+                : data.chunk;
+
+
+        streamingMessage.innerText =
+            "bot : " +
+            responseText;
+
+
+        scrollToBottom();
+
+    }
+
+);
+
+
+/* ========================================================
+   GENERATION COMPLETE
+======================================================== */
+
+socket.on(
+
+    "generation_complete",
+
+    function(data) {
+
+        console.log(
+            "Generation completed."
+        );
+
+    }
+
+);
+
+
+/* ========================================================
+   GENERATION CANCELLED
+======================================================== */
+
+socket.on(
+
+    "generation_cancelled",
+
+    function(data) {
+
+        thinking.classList.remove(
+            "visible"
+        );
+
+
+        if (streamingMessage) {
+
+            const currentText =
+                streamingMessage.innerText
+                    .replace(
+                        "bot :",
+                        ""
+                    )
+                    .trim();
+
+
+            if (!currentText) {
+
+                streamingMessage.remove();
+
+            }
+
+        }
+
+
+        streamingMessage = null;
+
+
+        scrollToBottom();
+
+    }
+
+);
+
+
+/* ========================================================
+   GENERATION FINISHED
+======================================================== */
+
+socket.on(
+
+    "generation_finished",
+
+    function() {
+
+        isGenerating = false;
+
+
+        thinking.classList.remove(
+            "visible"
+        );
+
+
+        stopBtn.style.display =
+            "none";
+
+
+        stopBtn.disabled =
+            false;
+
+
+        stopBtn.innerText =
+            "Stop";
+
+
+        messageInput.disabled =
+            false;
+
+
+        sendBtn.disabled =
+            false;
+
+
+        messageInput.focus();
+
+
+        streamingMessage = null;
+
+
+        scrollToBottom();
+
+    }
+
+);
+
+
+/* ========================================================
+   STOP BUTTON
+======================================================== */
+
+stopBtn.addEventListener(
+
+    "click",
+
+    function() {
+
+        stopBtn.disabled =
+            true;
+
+
+        stopBtn.innerText =
+            "Stopping...";
+
+
+        socket.emit(
+
+            "stop_generation",
+
+            {}
+
+        );
+
+    }
+
+);
+
+
+/* ========================================================
+   STOP RESULT
+======================================================== */
+
+socket.on(
+
+    "generation_stop_result",
+
+    function(data) {
+
+        console.log(
+            data.message
+        );
+
+    }
+
+);
+
+
+/* ========================================================
+   GENERATION ERROR
+======================================================== */
+
+socket.on(
+
+    "generation_error",
+
+    function(data) {
+
+        console.error(
+            data.message
+        );
+
+
+        thinking.classList.remove(
+            "visible"
+        );
+
+
+        isGenerating = false;
+
+
+        stopBtn.style.display =
+            "none";
+
+
+        messageInput.disabled =
+            false;
+
+
+        sendBtn.disabled =
+            false;
+
+
+        streamingMessage = null;
+
+    }
+
+);
+
+
+/* ========================================================
+   SATISFIED BUTTON
+======================================================== */
+
+satisfiedBtn.addEventListener(
+
+    "click",
+
+    function() {
+
+        if (
+
+            satisfiedBtn.classList.contains(
+                "active"
+            )
+
+        ) {
+
+            removeSatisfiedModal.style.display =
+                "flex";
+
+        }
+
+        else {
+
+            satisfiedModal.style.display =
+                "flex";
+
+        }
+
+    }
+
+);
+
+
+/* ========================================================
+   CONFIRM SATISFIED
+======================================================== */
+
+confirmSatisfiedBtn.addEventListener(
+
+    "click",
+
+    function() {
+
+        satisfiedModal.style.display =
+            "none";
+
+
+        satisfiedBtn.classList.add(
+            "active"
+        );
+
+
+        socket.emit(
+            "user_satisfied",
+            {}
+        );
+
+
+        socket.emit(
+            "satisfied_users"
+        );
+
+
+        socket.emit(
+            "Admin_analysis",
+            {}
+        );
+
+    }
+
+);
+
+
+/* ========================================================
+   CANCEL SATISFIED
+======================================================== */
+
+cancelSatisfiedBtn.addEventListener(
+
+    "click",
+
+    function() {
+
+        satisfiedModal.style.display =
+            "none";
+
+    }
+
+);
+
+
+/* ========================================================
+   CONFIRM REMOVE SATISFACTION
+======================================================== */
+
+confirmRemoveSatisfiedBtn.addEventListener(
+
+    "click",
+
+    function() {
+
+        removeSatisfiedModal.style.display =
+            "none";
+
+
+        satisfiedBtn.classList.remove(
+            "active"
+        );
+
+
+        socket.emit(
+            "remove_satisfied_user"
+        );
+
+
+        socket.emit(
+            "satisfied_users"
+        );
+
+
+        socket.emit(
+            "Admin_analysis",
+            {}
+        );
+
+    }
+
+);
+
+
+/* ========================================================
+   CANCEL REMOVE SATISFACTION
+======================================================== */
+
+cancelRemoveSatisfiedBtn.addEventListener(
+
+    "click",
+
+    function() {
+
+        removeSatisfiedModal.style.display =
+            "none";
+
+    }
+
+);
+/* ========================================================
+   MOBILE VIEWPORT HEIGHT FIX
+======================================================== */
+
+function setAppHeight() {
+
+    const height =
+        window.visualViewport
+            ? window.visualViewport.height
+            : window.innerHeight;
+
+
+    document.documentElement.style.setProperty(
+
+        "--app-height",
+
+        height + "px"
+
+    );
+
+}
+
+
+/* Run immediately */
+
+setAppHeight();
+
+
+/* Run when screen changes */
+
+window.addEventListener(
+
+    "resize",
+
+    setAppHeight
+
+);
+
+
+/* Important for mobile browsers */
+
+if (window.visualViewport) {
+
+    window.visualViewport.addEventListener(
+
+        "resize",
+
+        setAppHeight
+
+    );
+
+}
+
+
+</script>
+
+
+</body>
+
 </html>
